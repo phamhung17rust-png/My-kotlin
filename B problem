@@ -1,0 +1,16 @@
+fun main(){
+   var n=readln().toInt()
+   var x=readLine()!!.split(" ").map{it.toInt()}
+   var mx=0;var mxx=0;var cnt=0
+   for(i in x){
+        if(mx<i){
+        mxx=mx
+        mx=i
+        }
+        else{
+        if(i>mxx)mxx=i
+        }
+        if(i<mx && i<mxx)cnt++
+   }
+   print(cnt)
+}
