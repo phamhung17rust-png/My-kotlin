@@ -1,0 +1,24 @@
+fun query() {
+    val s1 = readln()
+    val s2 = readln()
+
+    var p = 0
+    for (i in s2.indices) {
+        if (p < s1.length && s2[i] == s1[p]) {
+            p++
+        } else if (p + 1 < s1.length && s2[i] == '+' && s1[p] == '-' && s1[p+1] == '-') {
+            p += 2
+        } else {
+            println("NO")
+            return
+        }
+    }
+    println(if (p == s1.length) "YES" else "NO")
+}
+
+fun main() {
+    val q = readln().toInt()
+    for (i in 1..q) {
+        query()
+    }
+}
