@@ -1,0 +1,162 @@
+import java.io.BufferedInputStream
+import java.io.PrintWriter
+import java.util.Arrays
+import kotlin.math.*
+
+private class FastScanner {
+    private val input = BufferedInputStream(System.`in`)
+    private val buffer = ByteArray(1 shl 16)
+    private var len = 0
+    private var ptr = 0
+    private fun readByte(): Int {
+        if (ptr >= len) {
+            len = input.read(buffer)
+            ptr = 0
+            if (len <= 0) return -1
+        }
+        return buffer[ptr++].toInt()
+    }
+    fun next(): String {
+        val sb = StringBuilder()
+        var c = readByte()
+        while (c <= 32 && c >= 0) c = readByte()
+        while (c > 32) {
+            sb.append(c.toChar())
+            c = readByte()
+        }
+        return sb.toString()
+    }
+    fun nextInt(): Int = next().toInt()
+    fun nextLong(): Long = next().toLong()
+}
+
+private val fs = FastScanner()
+private val out = PrintWriter(System.out)
+typealias ll = Long
+
+fun solve() {
+    val t = fs.nextInt()
+    val OFF = 1_100_000_000L
+    repeat(t) {
+        val n = fs.nextInt()
+        val xs = LongArray(n)
+        val ys = LongArray(n)
+        for (i in 0 until n) {
+            xs[i] = fs.nextLong()
+            ys[i] = fs.nextLong()}
+        val cx = xs.copyOf()
+        Arrays.sort(cx)
+        var m = 0
+        for (i in 0 until n) {
+            if (i == 0 || cx[i] != cx[i - 1]) cx[m++] = cx[i]}
+        val ux = cx.copyOf(m)
+        val ke = LongArray(n)
+        for (i in 0 until n) {
+            val hi = (ys[i] + OFF) shl 32
+            val lo = (xs[i] + OFF) and 0xffffffffL
+            ke[i] = hi or lo}
+        Arrays.sort(ke)
+        val hi = IntArray(m)
+        var dew = IntArray(4)
+        var pl = 0
+        var cd = IntArray(4)
+        var cdl = 0
+        var ew = IntArray(4)
+        var ew2 = IntArray(4)
+        var ews = 0
+        var tr = 0L
+        var fe = 0L
+        var i = 0
+        var gf = Long.MIN_VALUE
+        while (i < n) {
+            val yt = ke[i] ushr 32
+            val y = yt - OFF
+            var j = i
+            while (j < n && (ke[j] ushr 32) == yt) j++
+            val rl = j - i
+            if (cd.size < rl) cd = IntArray(max(cd.size shl 1, rl))
+            cdl = 0
+            var k = i
+            while (k < j) {
+                val vl = (ke[k] and 0xffffffffL) - OFF
+                val idx = Arrays.binarySearch(ux, vl)
+                cd[cdl++] = idx
+                k++}
+            val yc = (gf == y - 1)
+            var p = 0
+            var rln = 0
+            ews = 0
+            var sre = 0L
+            for (tpos in 0 until cdl) {
+                val idx = cd[tpos]
+                val xV = ux[idx]
+                val nr = if (tpos == 0) true else xV != ux[cd[tpos - 1]] + 1
+                if (nr) {
+                    if (rln > 0) fe += (rln.toLong() * (rln + 1L)) / 2L
+                    rln = 0
+                    ews = 0
+                    sre = 0L}
+                rln++
+                var ppq = false
+                if (yc) {
+                    while (p < pl && dew[p] < idx) p++
+                    if (p < pl && dew[p] == idx) {
+                        ppq = true
+                        p++}}
+                val hq = if (yc && ppq) hi[idx] + 1 else 1
+                hi[idx] = hq
+                var cnt = 1
+                while (ews > 0 && ew[ews - 1] >= hq) {
+                    sre -= ew[ews - 1].toLong() * ew2[ews - 1]
+                    cnt += ew2[ews - 1]
+                    ews--}
+                if (ew.size == ews) {
+                    val nh = IntArray(ew.size shl 1)
+                    val nc = IntArray(ew2.size shl 1)
+                    System.arraycopy(ew, 0, nh, 0, ew.size)
+                    System.arraycopy(ew2, 0, nc, 0, ew2.size)
+                    ew = nh
+                    ew2 = nc}
+                ew[ews] = hq
+                ew2[ews] = cnt
+                ews++
+                sre += hq.toLong() * cnt
+                tr += sre}
+            if (rln > 0) fe += (rln.toLong() * (rln + 1L)) / 2L
+            gf = y
+            val fs = dew
+            dew = cd
+            cd = fs
+            pl = cdl
+            i = j}
+        val kx = LongArray(n)
+        for (q in 0 until n) {
+            val hi = (xs[q] + OFF) shl 32
+            val lo = (ys[q] + OFF) and 0xffffffffL
+            kx[q] = hi or lo}
+        Arrays.sort(kx)
+        var vdeg = 0L
+        var p2 = 0
+        while (p2 < n) {
+            val enc = kx[p2] ushr 32
+            var ypr = (kx[p2] and 0xffffffffL) - OFF
+            var lrn = 1
+            var q = p2 + 1
+            while (q < n && (kx[q] ushr 32) == enc) {
+                val yvl = (kx[q] and 0xffffffffL) - OFF
+                if (yvl == ypr + 1) {
+                    lrn++
+                } else {
+                    vdeg += (lrn.toLong() * (lrn + 1L)) / 2L
+                    lrn = 1}
+                ypr = yvl
+                q++}
+            vdeg += (lrn.toLong() * (lrn + 1L)) / 2L
+            p2 = q}
+        val ans = 4L * tr - 2L * fe - 2L * vdeg
+        out.println(ans)}}
+
+fun main() {
+    solve()
+    out.flush()
+}
