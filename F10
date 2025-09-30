@@ -1,0 +1,92 @@
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.*
+
+object programkt {
+    var scanner: FastScanner = FastScanner()
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val MAX_N = 200005
+        var t = scanner.nextInt()
+        val b = IntArray(MAX_N)
+        val possible = BooleanArray(MAX_N)
+        var n = 0
+
+        while (t-- > 0) {
+            n = scanner.nextInt()
+
+            for (i in 1..n) {
+                b[i] = scanner.nextInt()
+                possible[i] = false
+            }
+
+            possible[0] = true
+
+            for (i in 1..n) {
+                if (i >= b[i] + 1 && possible[i - b[i] - 1]) {
+                    possible[i] = true
+                }
+                if (i + b[i] <= n && possible[i - 1]) {
+                    possible[i + b[i]] = true
+                }
+            }
+
+            if (possible[n]) {
+                println("YES")
+            } else {
+                println("NO")
+            }
+        }
+    }
+
+    class FastScanner internal constructor() {
+        var br: BufferedReader = BufferedReader(InputStreamReader(System.`in`))
+        var st: StringTokenizer? = null
+        fun nextLine(): String {
+            var res = ""
+            try {
+                res = br.readLine()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+            return res
+        }
+
+        fun next(): String {
+            while (st == null || !st!!.hasMoreTokens()) {
+                try {
+                    st = StringTokenizer(br.readLine())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            return st!!.nextToken()
+        }
+
+        fun nextInt(): Int {
+            return next().toInt()
+        }
+
+        fun nextLong(): Long {
+            return next().toLong()
+        }
+
+        fun nextDouble(): Double {
+            return next().toDouble()
+        }
+
+        fun nextFloat(): Float {
+            return next().toFloat()
+        }
+
+        fun nextByte(): Byte {
+            return next().toByte()
+        }
+
+        fun nextShort(): Short {
+            return next().toShort()
+        }
+    }
+}
