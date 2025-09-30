@@ -1,0 +1,65 @@
+const val L = 5
+
+data class Edge(val to: Int, val c: Int)
+
+fun solve() {
+    val (n, m, k) = readln().split(' ').map(String::toInt)
+    val a = (0 until n).map { readln().split(' ').map(String::toInt) }
+
+    println((0 until L).sumOf { bit ->
+        val b = a.map { v -> v.map { (it shr bit) and 1 != 0 } }
+
+        val g = List(n) { mutableListOf<Edge>() }
+        for (i in 0 until n) {
+            for (j in 0 until i) {
+                val cnt = IntArray(4) { 0 }
+                b[i].zip(b[j]).forEach { (x, y) -> cnt[(if (x) 1 else 0) + (if (y) 2 else 0)] += 1 }
+                if ((cnt[0] >= k || cnt[3] >= k) && (cnt[1] >= k || cnt[2] >= k)) {
+                    println(-1)
+                    return@solve
+                }
+                if (cnt[0] >= k || cnt[3] >= k) {
+                    g[i].add(Edge(j, 1))
+                    g[j].add(Edge(i, 1))
+                }
+                if (cnt[1] >= k || cnt[2] >= k) {
+                    g[i].add(Edge(j, 0))
+                    g[j].add(Edge(i, 0))
+                }
+            }
+        }
+
+        val color = IntArray(n) { -1 }
+        (0 until n).sumOf { v ->
+            if (color[v] > -1) {
+                return@sumOf 0
+            }
+            color[v] = 0
+            var cnt = 0
+            var sumcols = 0
+            val stack = mutableListOf(v)
+            while (stack.isNotEmpty()) {
+                val u = stack.removeLast()
+                cnt += 1
+                sumcols += color[u]
+                for ((to, c) in g[u]) {
+                    if (color[to] == -1) {
+                        color[to] = color[u] xor c
+                        stack.add(to)
+                    } else if (color[to] != color[u] xor c) {
+                        println(-1)
+                        return@solve
+                    }
+                }
+            }
+            minOf(sumcols, cnt - sumcols)
+        } shl bit
+    })
+}
+
+fun main() {
+    val t = readln().toInt()
+    repeat (t) {
+        solve()
+    }
+}
