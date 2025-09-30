@@ -1,0 +1,235 @@
+import java.io.PrintWriter
+import kotlin.math.*
+import kotlin.random.Random
+import kotlin.collections.sort as _sort
+import kotlin.collections.sortDescending as _sortDescending
+import kotlin.io.println as iprintln
+ 
+const val INTERACTIVE = false
+ 
+/** @author Spheniscine */
+fun main() { _writer.solve(); _writer.flush() }
+fun PrintWriter.solve() {
+//    val startTime = System.nanoTime()
+ 
+    val numCases = 1//readInt()
+ 
+    case@ for(case in 1..numCases) {
+        val n = readInt()
+        val m = readInt()
+ 
+        val f0 = readInt()-1
+        val l0 = readInt()-1
+ 
+        val cnt = Array(n) { IntArray(n) }
+        val cf = IntArray(n)
+        val cl = IntArray(n)
+ 
+        repeat(m-1) {
+            val f = readInt()-1
+            val l = readInt()-1
+ 
+            cnt[f][l]++
+            cf[f]++
+            cl[l]++
+        }
+ 
+        var ans = 0
+        for(f in 0 until n) for(l in 0 until n) if(f != l) {
+            var my = 0
+            if(f == f0) my++
+            if(l == l0) my++
+ 
+            val res = when(my) {
+                2 -> 1
+                1 -> cnt[f][l] + 1
+                else -> cf[f] + cl[l] - cnt[f][l] + 1
+            }
+ 
+            ans = max(ans, res)
+        }
+ 
+        println(ans)
+    }
+ 
+//    iprintln("Time: ${(System.nanoTime() - startTime) / 1000000} ms")
+}
+ 
+fun IntArray.setMin(i: Int, v: Int) = if(v < get(i)) { set(i, v); true } else false
+const val inf = Int.MAX_VALUE / 2
+ 
+infix fun Int.divCeil(other: Int) =
+    (this / other).let { if(xor(other) >= 0 && it * other != this) it+1 else it }
+ 
+inline infix fun Int.divFloor(other: Int) = Math.floorDiv(this, other)
+ 
+infix fun Long.divCeil(other: Long) =
+    (this / other).let { if(xor(other) >= 0 && it * other != this) it+1 else it }
+inline infix fun Long.divCeil(other: Int) = divCeil(other.toLong())
+ 
+inline infix fun Long.divFloor(other: Long) = Math.floorDiv(this, other)
+ 
+tailrec fun gcd(a: Long, b: Long): Long = if(a == 0L) abs(b) else gcd(b % a, a)
+ 
+tailrec fun gcd(a: Int, b: Int): Int = if(a == 0) abs(b) else gcd(b % a, a)
+ 
+/** IO */
+//@JvmField val ONLINE_JUDGE = System.getProperty("ONLINE_JUDGE") != null
+//const val PATH = "src/main/resources/"
+//@JvmField val INPUT = File(PATH + "input.txt").inputStream()
+//@JvmField val OUTPUT = File(PATH + "output.txt").outputStream()
+ 
+@JvmField val INPUT = System.`in`
+@JvmField val OUTPUT = System.out
+ 
+const val _BUFFER_SIZE = 1 shl 16
+@JvmField val _buffer = ByteArray(_BUFFER_SIZE)
+@JvmField var _bufferPt = 0
+@JvmField var _bytesRead = 0
+ 
+tailrec fun readChar(): Char {
+    if(!INTERACTIVE) {
+        if (_bufferPt == _bytesRead) {
+            _bufferPt = 0
+            _bytesRead = INPUT.read(_buffer, 0, _BUFFER_SIZE)
+        }
+        return if (_bytesRead < 0) Char.MIN_VALUE
+        else {
+            val c = _buffer[_bufferPt++].toChar()
+            if (c == '\r') readChar() else c
+        }
+    } else {
+        val c = INPUT.read().let { it xor it.shr(8) }.toChar()
+        return if (c == '\r') readChar() else c
+    }
+}
+ 
+/** @param skipNext Whether to skip the next character (usually whitespace), defaults to true */
+fun readCharArray(n: Int, skipNext: Boolean = true): CharArray {
+    val res = CharArray(n) { readChar() }
+    if(skipNext) readChar()
+    return res
+}
+inline fun readChars(n: Int, skipNext: Boolean = true) = readCharArray(n, skipNext)
+ 
+fun readLine(): String? {
+    var c = readChar()
+    return if(c == Char.MIN_VALUE) null
+    else buildString {
+        while(c != '\n' && c != Char.MIN_VALUE) {
+            append(c)
+            c = readChar()
+        }
+    }
+}
+fun readLn() = readLine()!!
+ 
+fun read() = buildString {
+    var c = readChar()
+    while(c <= ' ') {
+        if(c == Char.MIN_VALUE) return@buildString
+        c = readChar()
+    }
+    do {
+        append(c)
+        c = readChar()
+    } while(c > ' ')
+}
+fun readInt() = read().toInt()
+fun readDouble() = read().toDouble()
+fun readLong() = read().toLong()
+fun readStrings(n: Int) = Array(n) { read() }
+fun readLines(n: Int) = Array(n) { readLn() }
+fun readInts(n: Int) = IntArray(n) { read().toInt() }
+fun readIntArray(n: Int) = IntArray(n) { read().toInt() }
+fun readDoubles(n: Int) = DoubleArray(n) { read().toDouble() }
+fun readDoubleArray(n: Int) = DoubleArray(n) { read().toDouble() }
+fun readLongs(n: Int) = LongArray(n) { read().toLong() }
+fun readLongArray(n: Int) = LongArray(n) { read().toLong() }
+ 
+@JvmField val _writer = PrintWriter(OUTPUT, false)
+ 
+/**  sort overrides to avoid quicksort attacks */
+ 
+@JvmField var _random: Random? = null
+val random get() = _random ?: Random(0x594E215C123 * System.nanoTime()).also { _random = it }
+ 
+inline fun <A, T> _mergeSort(a0: A, n: Int, tmp0: A, get: A.(Int) -> T, set: A.(Int, T) -> Unit, cmp: (T, T) -> Int) {
+    var a = a0
+    var tmp = tmp0
+    var len = 1
+    while(len < n) {
+        var l = 0
+        while(true) {
+            val m = l + len
+            if(m >= n) break
+            val r = min(n, m + len)
+            var i = l
+            var j = m
+            for(k in l until r) {
+                if(i != m && (j == r || cmp(a.get(i), a.get(j)) <= 0)) {
+                    tmp.set(k, a.get(i++))
+                } else tmp.set(k, a.get(j++))
+            }
+            l = r
+        }
+        for(i in l until n) tmp.set(i, a.get(i))
+        val t = a; a = tmp; tmp = t
+        len += len
+    }
+    if(a !== a0) for(i in 0 until n) a0.set(i, tmp0.get(i))
+}
+ 
+inline fun IntArray.sortWith(cmp: (Int, Int) -> Int) { _mergeSort(this, size, IntArray(size), IntArray::get, IntArray::set, cmp) }
+inline fun <T: Comparable<T>> IntArray.sortBy(func: (Int) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> IntArray.sortByDescending(func: (Int) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun IntArray.sort() { sortBy { it } }
+fun IntArray.sortDescending() { sortByDescending { it } }
+ 
+inline fun LongArray.sortWith(cmp: (Long, Long) -> Int) { _mergeSort(this, size, LongArray(size), LongArray::get, LongArray::set, cmp) }
+inline fun <T: Comparable<T>> LongArray.sortBy(func: (Long) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> LongArray.sortByDescending(func: (Long) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun LongArray.sort() { sortBy { it } }
+fun LongArray.sortDescending() { sortByDescending { it } }
+ 
+inline fun DoubleArray.sortWith(cmp: (Double, Double) -> Int) { _mergeSort(this, size, DoubleArray(size), DoubleArray::get, DoubleArray::set, cmp) }
+inline fun <T: Comparable<T>> DoubleArray.sortBy(func: (Double) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> DoubleArray.sortByDescending(func: (Double) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun DoubleArray.sort() { sortBy { it } }
+fun DoubleArray.sortDescending() { sortByDescending { it } }
+ 
+inline fun CharArray.sort() { _sort() }
+inline fun CharArray.sortDescending() { _sortDescending() }
+ 
+inline fun <T : Comparable<T>> Array<out T>.sort() = _sort()
+inline fun <T : Comparable<T>> Array<out T>.sortDescending() = _sortDescending()
+inline fun <T : Comparable<T>> MutableList<out T>.sort() = _sort()
+inline fun <T : Comparable<T>> MutableList<out T>.sortDescending() = _sortDescending()
+ 
+// import preserving junk function
+@Suppress("NonAsciiCharacters") fun 雪花飄飄北風嘯嘯天地一片蒼茫() { iprintln(max(1, 2)) }
+ 
+fun IntArray.sumLong() = sumOf { it.toLong() }
+ 
+fun IntArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun IntArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun LongArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun LongArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun DoubleArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun DoubleArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun <T: Comparable<T>> Array<T>.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun <T: Comparable<T>> Array<T>.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun <T: Comparable<T>> List<T>.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun <T: Comparable<T>> List<T>.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+ 
+// max/min Kotlin 1.6 -> 1.4 shim
+fun IntArray.max() = maxOf { it }
+fun IntArray.min() = minOf { it }
+fun LongArray.max() = maxOf { it }
+fun LongArray.min() = minOf { it }
+fun CharArray.max() = maxOf { it }
+fun CharArray.min() = minOf { it }
+fun <T : Comparable<T>> Iterable<T>.max() = maxOf { it }
+fun <T : Comparable<T>> Iterable<T>.min() = minOf { it }
+fun <T : Comparable<T>> Sequence<T>.max() = maxOf { it }
+fun <T : Comparable<T>> Sequence<T>.min() = minOf { it }
