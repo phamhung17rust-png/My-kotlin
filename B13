@@ -1,0 +1,103 @@
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.math.*
+import java.io.BufferedInputStream
+import java.io.PrintWriter
+import java.io.*
+import java.security.KeyStore.TrustedCertificateEntry
+
+object io{
+    private const val BS = 1 shl 16
+    private const val NC = 0.toChar()
+    private val buf = ByteArray(BS)
+    private var bId = 0
+    private var size = 0
+    private var c = NC
+
+    private var IN: BufferedInputStream = BufferedInputStream(System.`in`, BS)
+    val OUT: PrintWriter = PrintWriter(System.out)
+
+    private val char: Char
+        get() {
+            while (bId == size) {
+                size = IN.read(buf) // no need for checked exceptions
+                if (size == -1) return NC
+                bId = 0
+            }
+            return buf[bId++].toChar()
+        }
+    fun nextint(): Int {
+        return nextlong().toInt()
+    }
+    fun nextlong(): Long {
+        var neg = false
+        if (c == NC) c = char
+        while (c < '0' || c > '9') {
+            if (c == '-') neg = true
+            c = char
+        }
+        var res = 0L
+        while (c in '0'..'9') {
+            res = (res shl 3) + (res shl 1) + (c - '0')
+            c = char
+        }
+        return if (neg) -res else res
+    }
+    fun nextstring():String{
+        val ret = StringBuilder()
+        while (true){
+            c = char
+            if(!iswhitespace(c)){ break}
+        }
+        ret.append(c)
+        while (true){
+            c = char
+            if(iswhitespace(c)){ break}
+            ret.append(c)
+        }
+        return ret.toString()
+    }
+    fun iswhitespace(c:Char):Boolean{
+        return c == ' ' || c == '\n' || c == '\r' || c == '\t'
+    }
+    fun put(aa:Any){ io.OUT.print(aa)}
+    fun done(){ io.OUT.close() }
+}
+fun solve(){
+    var n=io.nextint()
+    var m=io.nextint()
+    var a=IntArray(101)
+    var b=IntArray(101)
+    for (i in 1..100){
+        a[i]=0
+        b[i]=0
+    }
+    for (i in 1..n){
+        var t=io.nextint()
+        a[t]=1
+    }
+    for (i in 1..m){
+        var t=io.nextint()
+        b[t]=1
+    }
+    var th=0
+    for (i in 1..100){
+        if (a[i]>0&&b[i]>0){
+            th++
+        }
+    }
+    if (n<=m){
+        io.put(2*(n-th)+1)
+    } else {
+        io.put(2*(m-th+1))
+    }
+    io.put('\n')
+}
+fun main(){
+    var t=1
+    t=io.nextint()
+    for (i in 1..t){
+        solve()
+    }
+    io.done()
+}
