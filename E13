@@ -1,0 +1,67 @@
+import java.io.BufferedInputStream
+import java.lang.StringBuilder
+
+private const val MOD = 998244353
+
+private class FastScanner {
+    private val input = BufferedInputStream(System.`in`)
+    private val buffer = ByteArray(1 shl 16)
+    private var len = 0
+    private var ptr = 0
+
+    private fun readByte(): Int {
+        if (ptr >= len) {
+            len = input.read(buffer)
+            ptr = 0
+            if (len <= 0) return -1
+        }
+        return buffer[ptr++].toInt()
+    }
+
+    fun next(): String {
+        val sb = StringBuilder()
+        var c = readByte()
+        while (c <= 32 && c >= 0) c = readByte()
+        while (c > 32) {
+            sb.append(c.toChar())
+            c = readByte()
+        }
+        return sb.toString()
+    }
+
+    fun nextInt(): Int = next().toInt()
+}
+
+fun main() {
+    val fs = FastScanner()
+    val out = StringBuilder()
+
+    val TT = fs.nextInt()
+    repeat(TT) {
+        val s = fs.next()
+        val n = s.length
+        var ans = 1
+
+        for (ch in s) {
+            if (ch == '?') {
+                ans = (ans * 2) % MOD
+            }
+        }
+
+        var flg = 1
+        for (i in 0 until n) {
+            val expected = if (i == 0) '0' else '1'
+            val ch = s[i]
+            if (ch != expected && ch != '?') {
+                flg = 0
+                break
+            }
+        }
+
+        ans -= flg
+        if (ans < 0) ans += MOD
+        out.append(ans).append('\n')
+    }
+
+    print(out.toString())
+}
