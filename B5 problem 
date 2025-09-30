@@ -1,0 +1,14 @@
+import java.lang.Math.*
+import java.util.*
+
+fun main(args: Array<String>) {
+    val t = readLine()!!.toInt()
+    print(buildString {
+        for (i in 0 until t) {
+            val n = readLine()!!.toInt()
+            val a = (n+2) / 2
+            val b = n - a
+            appendLine(b)
+        }
+    })
+}
