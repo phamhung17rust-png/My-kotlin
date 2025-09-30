@@ -1,0 +1,105 @@
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.lang.Exception
+import java.util.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.system.exitProcess
+
+
+fun main() {
+    MainJava().run()
+}
+
+class MainJava {
+    private fun solveTest() {
+        val n = readInt()
+        var k = readInt()
+        val arr = readString().toCharArray()
+        val count = IntArray(255)
+        arr.forEach { count[it.code]++ }
+
+        var answer = 0
+        for (i in 0..25) {
+            var lower = count['a'.code + i]
+            var upper = count['A'.code + i]
+            val current = min(lower, upper)
+            lower -= current
+            upper -= current
+            var remainder = max(lower, upper) / 2
+            remainder = min(remainder, k)
+            k -= remainder
+            answer += current + remainder
+        }
+        out.print(answer.toString() + "\n")
+    }
+
+
+    @Throws(IOException::class)
+    fun solve() {
+        var t = readInt()
+        while (t-- > 0) solveTest()
+    }
+
+    private var `in` = BufferedReader(InputStreamReader(System.`in`))
+    private var out = PrintWriter(System.out)
+    private var tok = StringTokenizer("")
+
+    fun run() {
+        try {
+            solve()
+            out.flush()
+            out.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            exitProcess(-1)
+        }
+    }
+
+    @Throws(IOException::class)
+    fun readLine(): String {
+        return `in`.readLine()
+    }
+
+    var delimiter = " "
+
+    @Throws(IOException::class)
+    fun readString(): String {
+        while (!tok.hasMoreTokens()) {
+            val nextLine = readLine()
+            tok = StringTokenizer(nextLine)
+        }
+        return tok.nextToken(delimiter)
+    }
+
+    @Throws(IOException::class)
+    fun readIntArray(n: Int): IntArray {
+        val array = IntArray(n)
+        for (i in 0..<n) {
+            array[i] = readInt()
+        }
+        return array
+    }
+
+    @Throws(IOException::class)
+    fun readInt(): Int {
+        return readString().toInt()
+    }
+
+    fun sortIntArray(a: IntArray) {
+        val n = a.size
+        val arr = ArrayList<Int>(n)
+        for (j in a) arr.add(j)
+        arr.sort()
+        for (i in 0..<n) a[i] = arr[i]
+    }
+
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            MainJava().run()
+        }
+    }
+}
