@@ -1,0 +1,26 @@
+fun findUniqueElementIndex(array: IntArray): Int {
+    val counts = mutableMapOf<Int, Int>()
+
+    for (element in array) {
+        counts[element] = counts.getOrDefault(element, 0) + 1
+    }
+
+    for (i in array.indices) {
+        if (counts[array[i]] == 1) {
+            return i + 1
+        }
+    }
+    return -1
+}
+
+fun main() {
+    val t = readLine()!!.toInt()
+
+    repeat(t) {
+        val n = readLine()!!.toInt()
+        val elements = readLine()!!.split(" ").map { it.toInt() }.toIntArray()
+
+        val index = findUniqueElementIndex(elements)
+        println(index)
+    }
+}
