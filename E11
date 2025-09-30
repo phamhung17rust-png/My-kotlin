@@ -1,0 +1,60 @@
+import java.math.*
+import java.util.*
+import java.io.*
+private fun readLn() = readLine()!!
+private fun readInt() = readLine()!!.toInt()
+private fun readInts() = readLine()!!.split(" ").map{it.toInt()}
+private fun readLong() = readLine()!!.toLong()
+private fun readLongs() = readLine()!!.split(" ").map{it.toLong()}
+private fun readDouble() = readLine()!!.toDouble()
+private fun readDoubles() = readLine()!!.split(" ").map{it.toDouble()}
+private fun readStrings() = readLine()!!.split(" ")
+fun win(a: Char, b: Char): Int {
+    if (a == b) return 0
+    if (a == 'R') {
+        if (b == 'S') return 1
+        return -1
+    }
+    if (a == 'P') {
+        if (b == 'R') return 1
+        return -1
+    }
+    if (b == 'P') return 1
+    return -1
+}
+fun bot(a: Char): Char {
+    if (a == 'R') return 'P'
+    if (a == 'P') return 'S'
+    return 'R'
+}
+fun hum(a: Char): Char {
+    if (a == 'R') return 'S'
+    if (a == 'P') return 'R'
+    return 'P'
+}
+fun main(args: Array<String>){
+    repeat(readInt()){
+        var s = readLn()
+        var n = s.length
+        var d = 0
+        for (i in 0..n-1){
+            var c = 'R'
+            if (i < n - 1) c = hum(s[i + 1])
+            else c = bot(s[i])
+            d+=win(c, s[i])
+        }
+        if (s[0] == 'P') {
+            if (d >= 1) {
+                ++n
+            } else {
+                d+=2
+                n+=2
+            }
+        }
+        if (s[0] == 'S') {
+            ++d
+            ++n
+        }
+        println(n + Math.max(0, 1 - d))
+    }
+}
