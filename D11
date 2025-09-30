@@ -1,0 +1,157 @@
+import java.io.BufferedOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.PrintWriter
+import kotlin.math.*
+
+const val singleTest: Boolean = false
+
+val dx = intArrayOf(-1,1,0,0);
+val dy = intArrayOf(0,0,-1,1);
+
+fun find(n: Int, grid: Array<Array<Char>>, target:Char): IntArray {
+    var cnt = 0
+    var x = -1
+    var y = -1
+    for (i in 0..1) {
+        for (j in 0..n-1) {
+            if (grid[i][j] == target) {
+                cnt++
+                x = i
+                y = j
+            }
+        }
+    }
+    return intArrayOf(x, y, cnt)
+}
+
+fun inbound(x: Int, y: Int, n: Int, m: Int): Boolean = x >= 0 && y >= 0 && x < n && y < m
+
+fun solve() {
+    val m = ni()
+    val n = 2
+    val h = nl()
+    val b = nl()
+
+
+    val grid = nextCharGrid(n, m)
+    val sheep = find(m, grid, 'S')
+    val x = sheep[0]
+    val y = sheep[1]
+    var wolfCount = find(m, grid, 'W')[2]
+
+    var cost = 0L
+    for(i in 0 until 4) {
+        val nx = x + dx[i]
+        val ny = y + dy[i]
+        if(inbound(nx, ny, n, m) && grid[nx][ny] == 'W') {
+            cost += h
+            grid[nx][ny] = '.'
+            wolfCount--
+        }
+    }
+
+    val left = find(y, grid, 'W')[2]
+    val total = find(m, grid, 'W')[2]
+    val right = total - left
+
+    val threeWall = 3 * b
+    val killAll = total * h
+    val killLeft = left * h + (if(right > 0) 2*b else 0)
+    val killRight = right * h + (if(left > 0) 2*b else 0)
+    val res = cost + min(min(threeWall, killAll), min(killLeft, killRight))
+    print(res)
+
+}
+
+fun main() {
+    val numOfTests = if (singleTest) 1 else ni()
+    for (test in 1.. numOfTests) solve()
+    out.flush()
+}
+
+// reader and writer template
+class FastScanner(private val stream: InputStream) {
+    private val buf = ByteArray(1024)
+    private var curChar = 0
+    private var numChars = 0
+
+    private fun read(): Int {
+        if (numChars == -1) throw Exception("Input miss match!")
+        if (curChar >= numChars) {
+            curChar = 0
+            try {
+                numChars = stream.read(buf)
+            } catch (e: IOException) {
+                throw Exception("Input miss match!")
+            }
+            if (numChars <= 0) return -1
+        }
+        return buf[curChar++].toInt()
+    }
+
+    fun nextInt(): Int = nextLong().toInt()
+
+    fun nextLong(): Long {
+        var c = read()
+        while (isWhitespace(c)) c = read()
+        var negative = false
+        if (c == '-'.code) {
+            negative = true
+            c = read()
+        }
+        var res: Long = 0
+        do {
+            if (c < '0'.code || c > '9'.code) throw Exception("Input miss match!")
+            res = res * 10 + (c - '0'.code)
+            c = read()
+        } while (!isWhitespace(c))
+        return if (negative) -res else res
+    }
+
+    fun nextDouble(): Double = next().toDouble()
+
+    fun nextChar(): Char {
+        var c = read()
+        while (isWhitespace(c)) c = read()
+        return c.toChar()
+    }
+
+    fun next(): String {
+        var c = read()
+        while (isWhitespace(c)) c = read()
+        val res = StringBuilder()
+        do {
+            res.appendCodePoint(c)
+            c = read()
+        } while (!isWhitespace(c))
+        return res.toString()
+    }
+
+    private fun isWhitespace(c: Int): Boolean = c == ' '.code || c == '\n'.code || c == '\r'.code || c == '\t'.code || c == -1
+
+}
+
+val scanner = FastScanner(System.`in`)
+var out = PrintWriter(BufferedOutputStream(System.`out`))
+fun ni() = scanner.nextInt()
+fun nl() = scanner.nextLong()
+fun nd() = scanner.nextDouble()
+fun nc() = scanner.nextChar()
+fun ns() = scanner.next()
+fun nextIntArray(n: Int) = Array(n) { ni() }
+fun nextLongArray(n: Int) = Array(n) { nl() }
+fun nextDoubleArray(n: Int) = Array(n) { nd() }
+fun nextCharArray(n: Int) = Array(n) { scanner.nextChar() }
+fun nextIntGrid(n: Int, m: Int) = Array(n) { nextIntArray(m) }
+fun nextLongGrid(n: Int, m: Int) = Array(n) { nextLongArray(m) }
+fun nextDoubleGrid(n: Int, m: Int) = Array(n) { nextDoubleArray(m) }
+fun nextCharGrid(n: Int, m: Int) = Array(n) { nextCharArray(m)}
+fun print(array: Array<Int>) = out.println(array.joinToString(" "))
+fun print(array: Array<Long>) = out.println(array.joinToString(" "))
+fun print(array: Array<Double>) = out.println(array.joinToString(" "))
+fun print(array: IntArray) = out.println(array.joinToString(" "))
+fun print(array: LongArray) = out.println(array.joinToString(" "))
+fun print(array: DoubleArray) = out.println(array.joinToString(" "))
+fun print(list: List<Any>) = out.println(list.joinToString(" "))
+fun print(obj: Any) = out.println(obj.toString())
