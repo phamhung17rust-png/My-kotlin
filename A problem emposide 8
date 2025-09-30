@@ -1,0 +1,11 @@
+fun main() {
+repeat(readLine()!!.toInt()) {
+val s = readLine()!!
+val ans =
+if (s.contains('<'))
+if (s.contains('>')) '?' else '<'
+else
+if (s.contains('>')) '>' else '='
+println(ans)
+}
+}
