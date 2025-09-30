@@ -1,0 +1,21 @@
+import java.io.*
+
+fun main() {
+    val reader = BufferedReader(InputStreamReader(System.`in`))
+    val t = reader.readLine().toInt() // Number of test cases
+
+    val results = mutableListOf<Int>()
+    for (i in 1..t) {
+        val n = reader.readLine().toInt() // Length of the array
+        val a = reader.readLine().split(" ").map { it.toInt() } // The array itself
+
+        // Determine the common value
+        val common = if (a[0] == a[1] || a[0] == a[2]) a[0] else a[1]
+
+        // Find the index of the uncommon element
+        results.add((a.indices.first { a[it] != common } + 1)) // +1 for 1-based index
+    }
+
+    // Output all results
+    results.forEach { println(it) }
+}
