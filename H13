@@ -1,0 +1,99 @@
+fun main() {
+    val (n, m) = readLine()!!.split(" ").map { it.toInt() }
+
+    val deg = IntArray(n + 1)
+    val u = IntArray(m)
+    val v = IntArray(m)
+
+    repeat(m) { i ->
+        val (a, b) = readLine()!!.split(" ").map { it.toInt() }
+        u[i] = a
+        v[i] = b
+        deg[a]++
+        deg[b]++
+    }
+
+    val start = IntArray(n + 2)
+    var acc = 0
+    for (i in 1..n) {
+        start[i] = acc
+        acc += deg[i]
+    }
+
+    val pos = start.clone()
+    val adj = IntArray(2 * m)
+    for (i in 0 until m) {
+        val a = u[i]
+        val b = v[i]
+        adj[pos[a]] = b
+        pos[a]++
+        adj[pos[b]] = a
+        pos[b]++
+    }
+
+    val next = IntArray(n + 2)
+    val prev = IntArray(n + 2)
+    var head = if (n >= 1) 1 else 0
+
+    for (i in 1..n) {
+        next[i] = if (i < n) i + 1 else 0
+        prev[i] = if (i > 1) i - 1 else 0
+    }
+
+    val mark = BooleanArray(n + 1)
+    val q = IntArray(n + 5)
+    var min_comp = if (n > 0) n else 0
+    var has_iso = false
+
+    while (head != 0) {
+        val r = head
+        val p = prev[r]
+        val nx = next[r]
+        if (p != 0) next[p] = nx else head = nx
+        if (nx != 0) prev[nx] = p
+        next[r] = 0
+        prev[r] = 0
+
+        var qs = 0
+        var qt = 0
+        q[qt++] = r
+        var sz = 1
+
+        while (qs < qt) {
+            val cur = q[qs++]
+            for (j in start[cur] until start[cur] + deg[cur]) {
+                mark[adj[j]] = true
+            }
+
+            var node = head
+            while (node != 0) {
+                if (!mark[node]) {
+                    val rem = node
+                    node = next[node]
+                    val pp = prev[rem]
+                    val nn = next[rem]
+                    if (pp != 0) next[pp] = nn else head = nn
+                    if (nn != 0) prev[nn] = pp
+                    next[rem] = 0
+                    prev[rem] = 0
+                    q[qt++] = rem
+                    sz++
+                } else {
+                    node = next[node]
+                }
+            }
+
+            for (j in start[cur] until start[cur] + deg[cur]) {
+                mark[adj[j]] = false
+            }
+        }
+
+        if (sz < min_comp) min_comp = sz
+        if (sz == 1) has_iso = true
+    }
+
+    val min_ops = min_comp - 1
+    val max_ops = if (has_iso) 0 else n - 1
+
+    println("$min_ops $max_ops")
+}
