@@ -1,0 +1,110 @@
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.math.*
+import java.io.BufferedInputStream
+import java.io.PrintWriter
+import java.io.*
+import java.security.KeyStore.TrustedCertificateEntry
+
+object io{
+    private const val BS = 1 shl 16
+    private const val NC = 0.toChar()
+    private val buf = ByteArray(BS)
+    private var bId = 0
+    private var size = 0
+    private var c = NC
+
+    private var IN: BufferedInputStream = BufferedInputStream(System.`in`, BS)
+    val OUT: PrintWriter = PrintWriter(System.out)
+
+    private val char: Char
+        get() {
+            while (bId == size) {
+                size = IN.read(buf) // no need for checked exceptions
+                if (size == -1) return NC
+                bId = 0
+            }
+            return buf[bId++].toChar()
+        }
+    fun nextint(): Int {
+        return nextlong().toInt()
+    }
+    fun nextlong(): Long {
+        var neg = false
+        if (c == NC) c = char
+        while (c < '0' || c > '9') {
+            if (c == '-') neg = true
+            c = char
+        }
+        var res = 0L
+        while (c in '0'..'9') {
+            res = (res shl 3) + (res shl 1) + (c - '0')
+            c = char
+        }
+        return if (neg) -res else res
+    }
+    fun nextstring():String{
+        val ret = StringBuilder()
+        while (true){
+            c = char
+            if(!iswhitespace(c)){ break}
+        }
+        ret.append(c)
+        while (true){
+            c = char
+            if(iswhitespace(c)){ break}
+            ret.append(c)
+        }
+        return ret.toString()
+    }
+    fun iswhitespace(c:Char):Boolean{
+        return c == ' ' || c == '\n' || c == '\r' || c == '\t'
+    }
+    fun put(aa:Any){ io.OUT.print(aa)}
+    fun done(){ io.OUT.close() }
+}
+fun solve(){
+    var n=io.nextint()
+    var s=io.nextstring()
+    s=" "+s
+    var a=LongArray(n+1)
+    for (i in 1..n){
+        a[i]=io.nextlong()
+    }
+    var ans=0L
+    var sum=0L
+    for (i in 1..n){
+        if (a[i]>=0){
+            sum+=a[i]
+        }
+        if (s[i]=='<'){
+            var ths=sum
+            if (a[i]<0){
+                ths+=a[i]
+            }
+            ans=max(ans,ths)
+        }
+    }
+    sum=0L
+    for (i in n downTo 1){
+        if (a[i]>=0){
+            sum+=a[i]
+        }
+        if (s[i]=='>'){
+            var ths=sum
+            if (a[i]<0){
+                ths+=a[i]
+            }
+            ans=max(ans,ths)
+        }
+    }
+    println(ans)
+}
+fun main(){
+    var t=1
+    t=io.nextint()
+    for (i in 1..t){
+        solve()
+    }
+    io.done()
+}
