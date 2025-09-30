@@ -1,0 +1,284 @@
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.util.*
+import kotlin.math.*
+ 
+fun main() {
+    val tests = readInt()
+ 
+    for (test in 1 .. tests) {
+        val n = readInt()
+        val a = readInt()
+        val va = readInt()
+        val c = readInt()
+        val vc = readInt()
+        val b = readInt()
+ 
+        val res = solve(a, va, c, vc, b)
+ 
+        writeln(res)
+    }
+ 
+    closeWriter()
+}
+ 
+fun solve(a: Int, va: Int, c: Int, vc: Int, b: Int): Int {
+    val d = b - a
+    val vb = va + d
+ 
+    if (vb >= vc) {
+        return vc
+    }
+    return vb
+}
+ 
+fun gcd(a: Long, b: Long) : Long {
+    if (b == 0L) {
+        return a
+    }
+    return gcd(b, a % b)
+}
+ 
+fun gcd(a: Int, b: Int) : Int {
+    if (b == 0) {
+        return a
+    }
+    return gcd(b, a % b)
+}
+ 
+fun readListInt(n: Int) = (1..n).map { readInt() }
+ 
+fun readListLong(n: Int) = (1..n).map { readLong() }
+ 
+fun readListString(n: Int) = (1..n).map { read() }
+ 
+fun zFunc(s: String): IntArray {
+    val z = IntArray(s.length)
+ 
+    var l = 0
+    var r = 0
+    for (i in 1 until s.length) {
+        if (i < r) {
+            z[i] = minOf(r - i + 1, z[i - l])
+        }
+        while (i + z[i] < s.length && s[z[i]] == s[i + z[i]]) {
+            z[i]++
+        }
+ 
+        if (r < i + z[i] - 1) {
+            r = i + z[i] - 1
+            l = i
+        }
+    }
+ 
+    return z
+}
+ 
+fun String.fastContains(p: String): Boolean {
+    if (p.length > this.length) {
+        return false
+    }
+    val s = "$p\u0001$this"
+    return zFunc(s).contains(p.length)
+}
+ 
+class Graph(size: Int) {
+    private val g = Array(size) { mutableListOf<Edge>() }
+ 
+    fun addEdge(from: Int, to: Int, w: Int = 1) = g[from].add(Edge(from, to, w))
+ 
+    fun getEdges(from: Int) = g[from]
+ 
+    fun getAllEdges() = g.flatMap { it }
+}
+ 
+data class Edge(val from: Int, val to: Int, val w: Int = 1)
+ 
+data class FlowEdge(val from: Int, val to: Int, val capacity: Int) {
+    var flow = 0
+ 
+    fun residual() = capacity - flow
+}
+ 
+class FlowGraph(val n: Int) {
+    val from = Array(n) { mutableListOf<FlowEdge>() }
+    val to = Array(n) { mutableListOf<FlowEdge>() }
+ 
+    fun addEdge(f: Int, t: Int, c: Int = 1): FlowEdge {
+        val e = FlowEdge(f, t, c)
+        from[f].add(e)
+        to[t].add(e)
+        return e
+    }
+ 
+    fun findMaxFlow(source: Int, sink: Int): Int {
+        while (tryToAddFlow(source, sink)) {
+            //do nothing
+        }
+ 
+        return from[source].sumBy { it.flow }
+    }
+ 
+    private fun tryToAddFlow(source: Int, sink: Int): Boolean {
+        val visited = BooleanArray(n)
+        val cameByEdge = Array<FlowEdge?>(n) { null }
+        visited[source] = true
+        val queue = LinkedList<Int>()
+        queue.add(source)
+ 
+        while (queue.isNotEmpty()) {
+            val v = queue.poll()
+ 
+            for (e in from[v]) {
+                if (!visited[e.to] && e.residual() > 0) {
+                    visited[e.to] = true
+                    cameByEdge[e.to] = e
+                    queue.add(e.to)
+                }
+            }
+ 
+            for (e in to[v]) {
+                if (!visited[e.from] && e.flow > 0) {
+                    visited[e.from] = true
+                    cameByEdge[e.from] = e
+                    queue.add(e.from)
+                }
+            }
+        }
+ 
+        if (!visited[sink]) {
+            return false
+        }
+ 
+        var v = sink
+        var maxFlow = Int.MAX_VALUE
+        while (cameByEdge[v] != null) {
+            val e = cameByEdge[v]!!
+            if (e.to == v) {
+                maxFlow = minOf(maxFlow, e.residual())
+                v = e.from
+            } else {
+                maxFlow = minOf(maxFlow, e.flow)
+                v = e.to
+            }
+        }
+ 
+        v = sink
+        while (cameByEdge[v] != null) {
+            val e = cameByEdge[v]!!
+            if (e.to == v) {
+                e.flow += maxFlow
+                v = e.from
+            } else {
+                e.flow -= maxFlow
+                v = e.to
+            }
+        }
+ 
+        return true
+    }
+}
+ 
+class SegmentTree(n: Int) {
+ 
+    private val base = (2.0.pow(ceil(log2(n.toDouble())))).toInt()
+    private val a = LongArray(base * 2)
+ 
+    fun agg(left: Int, right: Int): Long {
+        var l = left + base
+        var r = right + base
+ 
+        var agg = 0L
+        while (l < r) {
+            if (l % 2 != 0) {
+                agg += a[l++]
+            }
+            if (r % 2 == 0) {
+                agg += a[r--]
+            }
+            l /= 2
+            r /= 2
+        }
+ 
+        if (l == r) {
+            agg += a[l]
+        }
+        return agg
+    }
+ 
+    fun set(pos: Int, v: Long) {
+        var i = pos + base
+        a[i] = v
+        i /= 2
+        while (i > 0) {
+            a[i] = a[i * 2] + a[i * 2 + 1]
+            i /= 2
+        }
+    }
+}
+ 
+fun writeln(obj: Any) {
+    writer.writeln(obj)
+}
+ 
+fun writeln() {
+    writer.writeln()
+}
+ 
+fun closeWriter() {
+    writer.close()
+}
+ 
+object writer {
+    private val writer = PrintWriter(System.out)
+ 
+    fun writeln(obj: Any) {
+        writer.println(obj)
+        //writer.flush()
+    }
+ 
+    fun writeln() {
+        writer.println()
+        //writer.flush()
+    }
+ 
+    fun close() {
+        writer.close()
+    }
+}
+ 
+fun read() = reader.next()
+ 
+fun readInt() = reader.nextInt()
+ 
+fun readLong() = reader.nextLong()
+ 
+fun readDouble() = reader.nextDouble()
+ 
+fun readLn() = reader.nextLine()
+ 
+object reader {
+    private var tokens: StringTokenizer? = null
+    private val reader = InputStreamReader(System.`in`).buffered()
+ 
+    fun next(): String {
+        var hasNext = tokens?.hasMoreElements() ?: false
+        while (!hasNext) {
+            tokens = StringTokenizer(reader.readLine())
+            hasNext = tokens?.hasMoreElements() ?: false
+        }
+ 
+        return tokens!!.nextToken()
+    }
+ 
+    fun nextLine(): String {
+        tokens = null
+        return reader.readLine()
+    }
+ 
+    fun nextInt() = next().toInt()
+ 
+    fun nextLong() = next().toLong()
+ 
+    fun nextDouble() = next().toDouble()
+}
