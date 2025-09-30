@@ -1,0 +1,37 @@
+import java.io.PrintWriter
+import java.util.*
+import kotlin.math.*
+
+fun main(){
+    fun PrintWriter.solve(){
+        val t = nextInt()
+        repeat(t){ 
+            val n = nextInt()
+            print(1)
+            for(x in n downTo 2){
+                print(" $x")
+            }
+            println()
+        }
+    }
+
+    writer.solve()
+    writer.flush()
+}
+
+private val reader = System.`in`.bufferedReader()
+private val writer = PrintWriter(System.out, false)
+
+private var tokenizer: StringTokenizer = StringTokenizer("")
+
+private fun next(): String {
+    while (tokenizer.hasMoreTokens().not()) tokenizer = StringTokenizer(reader.readLine())
+    return tokenizer.nextToken()
+}
+
+private fun nextInt() = next().toInt()
+private fun nextLong() = next().toLong()
+private fun nextDouble() = next().toDouble()
+private fun nextLine() = reader.readLine()
+private fun readInts() = nextLine().split(" ").map{it.toInt()}
+private fun readLongs() = nextLine().split(" ").map{it.toLong()}
