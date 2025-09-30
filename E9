@@ -1,0 +1,36 @@
+fun main() {
+  val ints = readln().split(' ').map { it.toInt() }
+  var tgt = ints[0]
+  var pows = ints[1]
+  val freq = mutableMapOf<Int, Int>()
+  while (tgt > 0 && pows > 0) {
+    val b = tgt.takeHighestOneBit()
+    freq[b] = freq.getOrPut(b) { 0 } + 1
+    tgt -= b
+    --pows
+  }
+  if (tgt > 0) {
+    println("NO")
+    return
+  }
+  while (pows > 0) {
+    val notOne = freq.keys.filter { it != 1 }
+    if (notOne.isEmpty()) {
+      println("NO")
+      return
+    }
+    val k = notOne[0]
+    val v = freq[k]!!
+    if (v >= pows) {
+      freq[k] = v - pows
+      freq[k / 2] = freq.getOrPut(k / 2) { 0 } + pows * 2
+      pows = 0
+    } else {
+      freq.remove(k)
+      freq[k / 2] = freq.getOrPut(k / 2) { 0 } + v * 2
+      pows -= v
+    }
+  }
+  println("YES")
+  println(freq.map { (k, v) -> (k.toString() + " ").repeat(v) }.joinToString(" "))
+}
