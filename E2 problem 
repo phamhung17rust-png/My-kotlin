@@ -1,0 +1,98 @@
+import java.io.*
+import java.util.*
+import kotlin.collections.ArrayDeque
+import kotlin.math.*
+import kotlin.random.*
+
+fun main() {
+    val fs = FS(System.`in`)
+    val out = PrintWriter(System.out)
+
+    var MAX = 200200
+    var n = fs.nextInt()
+    var arr = IntArray(n){_ -> fs.nextInt()}
+
+    var freq = IntArray(MAX)
+    for(i in 0 until n) freq[arr[i]]++
+
+    var max = 0
+    for(i in 1 until MAX) {
+        if(freq[i] != 2) break
+        max = i
+    }
+
+    var lo = 1;
+    var hi = max
+    var realMax = 0
+
+    fun solve(mid: Int): Boolean {
+        var used = BooleanArray(n)
+        var seen = BooleanArray(n)
+        var perm = IntArray(mid)
+        var ptr = 0
+        for(i in 0 until n) {
+            if(arr[i] > mid) continue
+            if(seen[arr[i]]) continue
+
+            used[i] = true
+            seen[arr[i]] = true
+            perm[ptr++] = arr[i]
+        }
+
+        ptr = 0
+        for(i in 0 until n) {
+            if(arr[i] > mid) continue
+            if(used[i]) continue
+
+            if(arr[i] != perm[ptr]) return false
+            ptr++
+        }
+
+        return true
+    }
+
+    while(lo <= hi) {
+        var mid = (lo + hi) / 2
+        if(solve(mid)) {
+            max = mid
+            lo = mid+1
+        }
+        else {
+            hi = mid-1
+        }
+    }
+
+    var res = CharArray(n)
+    var hit = BooleanArray(max+2)
+    
+    for(i in 0 until n) {
+        if(arr[i] > max) {
+            res[i] = 'B'
+        }
+        else {
+            if(hit[arr[i]]) res[i] = 'G'
+            else res[i] = 'R'
+
+            hit[arr[i]] = true
+        }
+    }
+
+    println(res.joinToString(""))
+
+    out.close()
+}
+
+class FS(stin: InputStream) {
+    val read = BufferedReader(InputStreamReader(stin))
+    var token = StringTokenizer("")
+
+    tailrec fun next(): String {
+        if(token.hasMoreTokens()) return token.nextToken()
+        token = StringTokenizer(read.readLine())
+        return next()
+    }
+
+    fun nextInt() = next().toInt()
+    fun nextLong() = next().toLong()
+    fun nextDouble() = next().toDouble()
+}
