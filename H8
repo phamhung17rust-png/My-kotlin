@@ -1,0 +1,406 @@
+
+
+import java.io.PrintWriter
+import java.util.TreeMap
+import kotlin.math.*
+import kotlin.random.Random
+import kotlin.collections.sort as _sort
+import kotlin.collections.sortDescending as _sortDescending
+import kotlin.io.println as iprintln
+
+const val INTERACTIVE = false
+
+/** @author Spheniscine */
+fun main() { _writer.solve(); _writer.flush() }
+fun PrintWriter.solve() {
+//    val startTime = System.nanoTime()
+
+    val numCases = 1//readInt()
+
+    case@ for(case in 1..numCases) {
+        val scale = ModInt(1_000_000).inverse()
+
+        val n = readInt()
+        val a = readInt() * 2
+        val b = readInt() * 2
+
+        // inverse probabilities
+        val q_row = ModIntArray(a+1) { ModInt(1) }
+        val q_col = ModIntArray(b+1) { ModInt(1) }
+        val q_dia = ModIntArray(a+b+1) { ModInt(1) } // diagonal, x+y
+        val q_adi = ModIntArray(a+b+1) { ModInt(1) } // antidiagonal, x+(b-y)
+
+        q_row[0] = ModInt(0); q_row[a] = ModInt(0)
+        q_col[0] = ModInt(0); q_col[b] = ModInt(0)
+
+        repeat(n) {
+            val x = readInt() * 2
+            val y = readInt() * 2
+            val q = !(scale * readInt())
+
+            q_row[x] = ModInt(0)
+            q_col[y] = ModInt(0)
+            q_dia[x+y] *= q
+            q_adi[x+b-y] *= q
+        }
+
+        var ee = ModInt(0)
+        var ev = ModInt(0)
+        val half = ModInt(2).inverse()
+        for(x in 0..a) {
+            val qr = q_row[x]
+            val bordVert = x == 0 || x == a
+            for(y in 0..b) {
+                val qc = q_col[y]
+                val qd = q_dia[x+y]
+                val qa = q_adi[x+b-y]
+                val bordHorz = y == 0 || y == b
+                val bord = bordVert || bordHorz
+
+                ev += !(qr * qc * qd * qa)
+
+                ee += !qr * if(bordHorz) half else ModInt(1)
+                ee += !qc * if(bordVert) half else ModInt(1)
+                ee += (!qd + !qa) * if(bord) half else ModInt(1)
+            }
+        }
+
+        val ans = ee - ev + 1
+        println(ans.int)
+    }
+
+//    iprintln("Time: ${(System.nanoTime() - startTime) / 1000000} ms")
+}
+
+operator fun ModInt.not() = ModInt(1) - this
+
+const val BILLION7 = 1e9.toInt() + 7
+const val MOD = 998244353
+const val TOTIENT = MOD - 1 // assumes MOD is prime
+inline val half get() = ModInt(MOD.shr(1) + 1)
+
+infix fun Int.modulo(mod: Int): Int = (this % mod).let { (it shr Int.SIZE_BITS - 1 and mod) + it }
+infix fun Long.modulo(mod: Long) = (this % mod).let { (it shr Long.SIZE_BITS - 1 and mod) + it }
+infix fun Long.modulo(mod: Int) = modulo(mod.toLong()).toInt()
+
+fun Int.mulMod(other: Int, mod: Int) = toLong() * other modulo mod
+
+fun Int.powMod(exponent: Long, mod: Int): Int {
+    if(exponent < 0) error("Inverse not implemented")
+    if(mod == 1) return 0
+    var res = 1L
+    var e = exponent
+    var b = modulo(mod).toLong()
+
+    while(e > 0) {
+        if(e and 1 == 1L) {
+            res = res * b % mod
+        }
+        e = e shr 1
+        b = b * b % mod
+    }
+    return res.toInt()
+}
+fun Int.powMod(exponent: Int, mod: Int) = powMod(exponent.toLong(), mod)
+fun Int.modPowArray(n: Int, mod: Int): IntArray {
+    val res = IntArray(n+1)
+    if(mod == 1) return res
+    res[0] = 1
+    for(i in 1..n) res[i] = mulMod(res[i-1], mod)
+    return res
+}
+
+inline fun Int.toModInt() = ModInt(this modulo MOD)
+inline fun Long.toModInt() = ModInt(this modulo MOD)
+
+/** note: Only use constructor for int within modulo range, otherwise use toModInt **/
+inline class ModInt(val int: Int) {
+    companion object {
+        /** can't seem to make these private or inlined without causing compiler issues */
+        @JvmField val _invMemo = HashMap<ModInt, ModInt>()
+        fun _invMemoized(m: ModInt) = _invMemo.getOrPut(m) { m.inv_unmemoized() }
+    }
+
+    // normalizes an integer that's within range [-MOD, MOD) without branching
+    private inline fun normalize(int: Int) = ModInt((int shr Int.SIZE_BITS - 1 and MOD) + int)
+
+    operator fun plus(other: ModInt) = normalize(int + other.int - MOD) // overflow-safe even if MOD >= 2^30
+    inline operator fun plus(other: Int) = plus(other.toModInt())
+    operator fun inc() = normalize(int + (1 - MOD))
+
+    operator fun minus(other: ModInt) = normalize(int - other.int)
+    inline operator fun minus(other: Int) = minus(other.toModInt())
+    operator fun dec() = normalize(int - 1)
+    operator fun unaryMinus() = normalize(-int)
+
+    operator fun times(other: ModInt) = ModInt((int.toLong() * other.int % MOD).toInt())
+    inline operator fun times(other: Int) = ModInt(int.mulMod(other, MOD))
+
+    fun pow(exponent: Int): ModInt {
+        val e = if(exponent < 0) {
+            require(int != 0) { "Can't invert/divide by 0" }
+            exponent modulo TOTIENT
+        } else exponent
+        return ModInt(int.powMod(e, MOD))
+    }
+
+    fun pow(exponent: Long) = if(int == 0) when {
+        exponent > 0 -> this
+        exponent == 0L -> ModInt(1)
+        else -> error("Can't invert/divide by 0")
+    } else pow(exponent modulo TOTIENT)
+
+    inline fun inverse() = inv_unmemoized() /** NOTE: Change if necessary */
+
+    fun inv_unmemoized(): ModInt {
+        require(int != 0) { "Can't invert/divide by 0" }
+        return pow(TOTIENT - 1)
+    }
+    inline fun inv_memoized() = _invMemoized(this)
+
+    operator fun div(other: ModInt) = times(other.inverse())
+    inline operator fun div(other: Int) = div(other.toModInt())
+
+    override inline fun toString() = int.toString()
+}
+
+inline operator fun Int.plus(modInt: ModInt) = modInt + this
+inline operator fun Int.minus(modInt: ModInt) = toModInt() - modInt
+inline operator fun Int.times(modInt: ModInt) = modInt * this
+inline operator fun Int.div(modInt: ModInt) = modInt.inverse() * this
+
+inline class ModIntArray(val intArray: IntArray): Collection<ModInt> {
+    inline operator fun get(i: Int) = ModInt(intArray[i])
+    inline operator fun set(i: Int, v: ModInt) { intArray[i] = v.int }
+
+    override inline val size: Int get() = intArray.size
+    inline val lastIndex get() = intArray.lastIndex
+    inline val indices get() = intArray.indices
+
+    override inline fun contains(element: ModInt): Boolean = element.int in intArray
+
+    override fun containsAll(elements: Collection<ModInt>): Boolean = elements.all(::contains)
+
+    override inline fun isEmpty(): Boolean = intArray.isEmpty()
+
+    override fun iterator(): Iterator<ModInt> = object: Iterator<ModInt> {
+        var index = 0
+        override fun hasNext(): Boolean = index < size
+        override fun next(): ModInt = get(index++)
+    }
+
+    fun copyOf(newSize: Int) = ModIntArray(intArray.copyOf(newSize))
+    fun copyOf() = copyOf(size)
+
+    fun swap(i: Int, j: Int) { val t = intArray[i]; intArray[i] = intArray[j]; intArray[j] = t }
+}
+fun ModIntArray.fill(element: ModInt, fromIndex: Int = 0, toIndex: Int = size) { intArray.fill(element.int, fromIndex, toIndex) }
+fun ModIntArray.copyInto(destination: ModIntArray, destinationOffset: Int = 0, startIndex: Int = 0, endIndex: Int = size) =
+    ModIntArray(intArray.copyInto(destination.intArray, destinationOffset, startIndex, endIndex))
+inline fun ModIntArray(size: Int) = ModIntArray(IntArray(size))
+inline fun ModIntArray(size: Int, init: (Int) -> ModInt) = ModIntArray(IntArray(size) { init(it).int })
+
+fun ModInt.powArray(n: Int) = ModIntArray(int.modPowArray(n, MOD))
+
+inline fun ModIntArray.first() = get(0)
+inline fun ModIntArray.last() = get(lastIndex)
+inline fun ModIntArray.joinToString(separator: CharSequence) = intArray.joinToString(separator)
+inline fun <R> ModIntArray.fold(init: R, op: (acc: R, ModInt) -> R) = intArray.fold(init) { acc, i -> op(acc, ModInt(i)) }
+inline fun <R> ModIntArray.foldRight(init: R, op: (ModInt, acc: R) -> R) = intArray.foldRight(init) { i, acc -> op(ModInt(i), acc) }
+fun ModIntArray.sum() = fold(ModInt(0), ModInt::plus)
+fun ModIntArray.product() = fold(ModInt(1), ModInt::times)
+
+inline fun <T> Iterable<T>.sumByModInt(func: (T) -> ModInt) = fold(ModInt(0)) { acc, t -> acc + func(t) }
+inline fun <T> Iterable<T>.productByModInt(func: (T) -> ModInt) = fold(ModInt(1)) { acc, t -> acc * func(t) }
+inline fun <T> Sequence<T>.sumByModInt(func: (T) -> ModInt) = fold(ModInt(0)) { acc, t -> acc + func(t) }
+inline fun <T> Sequence<T>.productByModInt(func: (T) -> ModInt) = fold(ModInt(1)) { acc, t -> acc * func(t) }
+inline fun <T> Array<T>.sumByModInt(func: (T) -> ModInt) = fold(ModInt(0)) { acc, t -> acc + func(t) }
+inline fun <T> Array<T>.productByModInt(func: (T) -> ModInt) = fold(ModInt(1)) { acc, t -> acc * func(t) }
+fun Iterable<ModInt>.sum() = sumByModInt { it }
+fun Sequence<ModInt>.sum() = sumByModInt { it }
+fun Iterable<ModInt>.product() = productByModInt { it }
+fun Sequence<ModInt>.product() = productByModInt { it }
+fun Collection<ModInt>.toModIntArray() = ModIntArray(size).also { var i = 0; for(e in this) { it[i++] = e } }
+
+
+fun IntArray.setMax(i: Int, v: Int) = if(v > get(i)) { set(i, v); true } else false
+fun IntArray.setMin(i: Int, v: Int) = if(v < get(i)) { set(i, v); true } else false
+
+fun LongArray.setMax(i: Int, v: Long) = if(v > get(i)) { set(i, v); true } else false
+fun LongArray.setMin(i: Int, v: Long) = if(v < get(i)) { set(i, v); true } else false
+
+infix fun Int.divCeil(other: Int) =
+    (this / other).let { if(xor(other) >= 0 && it * other != this) it+1 else it }
+
+inline infix fun Int.divFloor(other: Int) = Math.floorDiv(this, other)
+
+infix fun Long.divCeil(other: Long) =
+    (this / other).let { if(xor(other) >= 0 && it * other != this) it+1 else it }
+inline infix fun Long.divCeil(other: Int) = divCeil(other.toLong())
+
+inline infix fun Long.divFloor(other: Long) = Math.floorDiv(this, other)
+
+tailrec fun gcd(a: Long, b: Long): Long = if(a == 0L) abs(b) else gcd(b % a, a)
+
+tailrec fun gcd(a: Int, b: Int): Int = if(a == 0) abs(b) else gcd(b % a, a)
+
+/** IO */
+//@JvmField val ONLINE_JUDGE = System.getProperty("ONLINE_JUDGE") != null
+//const val PATH = "src/main/resources/"
+//@JvmField val INPUT = File(PATH + "input.txt").inputStream()
+//@JvmField val OUTPUT = File(PATH + "output.txt").outputStream()
+
+@JvmField val INPUT = System.`in`
+@JvmField val OUTPUT = System.out
+
+const val _BUFFER_SIZE = 1 shl 16
+@JvmField val _buffer = ByteArray(_BUFFER_SIZE)
+@JvmField var _bufferPt = 0
+@JvmField var _bytesRead = 0
+
+tailrec fun readChar(): Char {
+    if(!INTERACTIVE) {
+        if (_bufferPt == _bytesRead) {
+            _bufferPt = 0
+            _bytesRead = INPUT.read(_buffer, 0, _BUFFER_SIZE)
+        }
+        return if (_bytesRead < 0) Char.MIN_VALUE
+        else {
+            val c = _buffer[_bufferPt++].toChar()
+            if (c == '\r') readChar() else c
+        }
+    } else {
+        val c = INPUT.read().let { it xor it.shr(8) }.toChar()
+        return if (c == '\r') readChar() else c
+    }
+}
+
+/** @param skipNext Whether to skip the next character (usually whitespace), defaults to true */
+fun readCharArray(n: Int, skipNext: Boolean = true): CharArray {
+    val res = CharArray(n) { readChar() }
+    if(skipNext) readChar()
+    return res
+}
+inline fun readChars(n: Int, skipNext: Boolean = true) = readCharArray(n, skipNext)
+
+fun readLine(): String? {
+    var c = readChar()
+    return if(c == Char.MIN_VALUE) null
+    else buildString {
+        while(c != '\n' && c != Char.MIN_VALUE) {
+            append(c)
+            c = readChar()
+        }
+    }
+}
+fun readLn() = readLine()!!
+
+fun read() = buildString {
+    var c = readChar()
+    while(c <= ' ') {
+        if(c == Char.MIN_VALUE) return@buildString
+        c = readChar()
+    }
+    do {
+        append(c)
+        c = readChar()
+    } while(c > ' ')
+}
+fun readInt() = read().toInt()
+fun readDouble() = read().toDouble()
+fun readLong() = read().toLong()
+fun readStrings(n: Int) = Array(n) { read() }
+fun readLines(n: Int) = Array(n) { readLn() }
+fun readInts(n: Int) = IntArray(n) { read().toInt() }
+fun readIntArray(n: Int) = IntArray(n) { read().toInt() }
+fun readDoubles(n: Int) = DoubleArray(n) { read().toDouble() }
+fun readDoubleArray(n: Int) = DoubleArray(n) { read().toDouble() }
+fun readLongs(n: Int) = LongArray(n) { read().toLong() }
+fun readLongArray(n: Int) = LongArray(n) { read().toLong() }
+
+@JvmField val _writer = PrintWriter(OUTPUT, false)
+
+/**  sort overrides to avoid quicksort attacks */
+
+@JvmField var _random: Random? = null
+val random get() = _random ?: Random(0x594E215C123 * System.nanoTime()).also { _random = it }
+
+inline fun <A, T> _mergeSort(a0: A, n: Int, tmp0: A, get: A.(Int) -> T, set: A.(Int, T) -> Unit, cmp: (T, T) -> Int) {
+    var a = a0
+    var tmp = tmp0
+    var len = 1
+    while(len < n) {
+        var l = 0
+        while(true) {
+            val m = l + len
+            if(m >= n) break
+            val r = min(n, m + len)
+            var i = l
+            var j = m
+            for(k in l until r) {
+                if(i != m && (j == r || cmp(a.get(i), a.get(j)) <= 0)) {
+                    tmp.set(k, a.get(i++))
+                } else tmp.set(k, a.get(j++))
+            }
+            l = r
+        }
+        for(i in l until n) tmp.set(i, a.get(i))
+        val t = a; a = tmp; tmp = t
+        len += len
+    }
+    if(a !== a0) for(i in 0 until n) a0.set(i, tmp0.get(i))
+}
+
+inline fun IntArray.sortWith(cmp: (Int, Int) -> Int) { _mergeSort(this, size, IntArray(size), IntArray::get, IntArray::set, cmp) }
+inline fun <T: Comparable<T>> IntArray.sortBy(func: (Int) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> IntArray.sortByDescending(func: (Int) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun IntArray.sort() { sortBy { it } }
+fun IntArray.sortDescending() { sortByDescending { it } }
+
+inline fun LongArray.sortWith(cmp: (Long, Long) -> Int) { _mergeSort(this, size, LongArray(size), LongArray::get, LongArray::set, cmp) }
+inline fun <T: Comparable<T>> LongArray.sortBy(func: (Long) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> LongArray.sortByDescending(func: (Long) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun LongArray.sort() { sortBy { it } }
+fun LongArray.sortDescending() { sortByDescending { it } }
+
+inline fun DoubleArray.sortWith(cmp: (Double, Double) -> Int) { _mergeSort(this, size, DoubleArray(size), DoubleArray::get, DoubleArray::set, cmp) }
+inline fun <T: Comparable<T>> DoubleArray.sortBy(func: (Double) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> DoubleArray.sortByDescending(func: (Double) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun DoubleArray.sort() { sortBy { it } }
+fun DoubleArray.sortDescending() { sortByDescending { it } }
+
+inline fun CharArray.sort() { _sort() }
+inline fun CharArray.sortDescending() { _sortDescending() }
+
+inline fun <T : Comparable<T>> Array<out T>.sort() = _sort()
+inline fun <T : Comparable<T>> Array<out T>.sortDescending() = _sortDescending()
+inline fun <T : Comparable<T>> MutableList<out T>.sort() = _sort()
+inline fun <T : Comparable<T>> MutableList<out T>.sortDescending() = _sortDescending()
+
+// import preserving junk function
+@Suppress("NonAsciiCharacters") fun 雪花飄飄北風嘯嘯天地一片蒼茫() { iprintln(max(1, 2)) }
+
+fun IntArray.sumLong() = sumOf { it.toLong() }
+
+fun IntArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun IntArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun LongArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun LongArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun DoubleArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun DoubleArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun <T: Comparable<T>> Array<T>.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun <T: Comparable<T>> Array<T>.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun <T: Comparable<T>> List<T>.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun <T: Comparable<T>> List<T>.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+
+// max/min Kotlin 1.6 -> 1.4 shim
+fun IntArray.max() = maxOf { it }
+fun IntArray.min() = minOf { it }
+fun LongArray.max() = maxOf { it }
+fun LongArray.min() = minOf { it }
+fun CharArray.max() = maxOf { it }
+fun CharArray.min() = minOf { it }
+fun <T : Comparable<T>> Iterable<T>.max() = maxOf { it }
+fun <T : Comparable<T>> Iterable<T>.min() = minOf { it }
+fun <T : Comparable<T>> Sequence<T>.max() = maxOf { it }
+fun <T : Comparable<T>> Sequence<T>.min() = minOf { it }
