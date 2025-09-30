@@ -1,0 +1,72 @@
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.*
+
+//object Main {
+//    @Throws(IOException::class)
+//    @JvmStatic
+    fun main(args: Array<String>) {
+        val `in` = InputReader()
+        val n = `in`.nextInt()
+        val a = IntArray(n)
+        for (i in 0 until n) a[i] = `in`.nextInt()
+        asort(a)
+        var ans = 0
+        var i = 1
+        while (i < n) {
+            ans += a[i] - a[i - 1]
+            i += 2
+        }
+        println(ans)
+    }
+
+    fun asort(arr: IntArray) {
+        val al = ArrayList<Int>()
+        for (e in arr) al.add(e)
+        Collections.sort(al)
+        for (i in arr.indices) arr[i] = al[i]
+    }
+//}
+
+internal class InputReader {
+    private val bufferedReader = BufferedReader(InputStreamReader(System.`in`))
+    private var stringTokenizer: StringTokenizer?
+
+    init {
+        stringTokenizer = null
+    }
+
+    @Throws(IOException::class)
+    fun nextLine(): String {
+        return bufferedReader.readLine()
+    }
+
+    @Throws(IOException::class)
+    fun next(): String {
+        while (stringTokenizer == null || !stringTokenizer!!.hasMoreTokens()) {
+            stringTokenizer = StringTokenizer(bufferedReader.readLine())
+        }
+        return stringTokenizer!!.nextToken()
+    }
+
+    @Throws(IOException::class)
+    fun nextInt(): Int {
+        return next().toInt()
+    }
+
+    @Throws(IOException::class)
+    fun nextLong(): Long {
+        return next().toLong()
+    }
+
+    @Throws(IOException::class)
+    fun nextFloat(): Float {
+        return next().toFloat()
+    }
+
+    @Throws(IOException::class)
+    fun nextDouble(): Double {
+        return next().toDouble()
+    }
+}
