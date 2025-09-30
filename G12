@@ -1,0 +1,76 @@
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.util.StringTokenizer
+
+const val MOD = 998244353L
+
+fun modPow(a: Long, e: Long): Long {
+    var base = a % MOD
+    var exp = e
+    var res = 1L
+    while (exp > 0) {
+        if (exp and 1L == 1L) res = res * base % MOD
+        base = base * base % MOD
+        exp = exp shr 1
+    }
+    return res
+}
+
+fun main() {
+    val Kaze = BufferedReader(InputStreamReader(System.`in`))
+    val Hikari = PrintWriter(System.out)
+    val Rai = Kaze.readLine().toInt()
+    val Sora = LongArray(Rai)
+    var Mori = 0L
+    StringTokenizer(Kaze.readLine()).apply {
+        for (i in 0 until Rai) {
+            Sora[i] = nextToken().toLong()
+            Mori += Sora[i]
+        }
+    }
+
+    val Kumo = LongArray(Rai) { i -> Sora[i] + (i + 1) }
+    Kumo.sort()
+
+    val Hana = LongArray(Rai + 1)
+    for (i in 1..Rai) Hana[i] = Hana[i - 1] + Kumo[i - 1]
+
+    val Tsuba = LongArray(Rai + 1) { 1L }
+    val Kiba = LongArray(Rai + 1) { 1L }
+    for (i in 1..Rai) Tsuba[i] = Tsuba[i - 1] * i % MOD
+    Kiba[Rai] = modPow(Tsuba[Rai], MOD - 2)
+    for (i in Rai downTo 1) Kiba[i - 1] = Kiba[i] * i % MOD
+
+    fun comb(n: Int, k: Int): Long =
+        if (k < 0 || k > n) 0L else Tsuba[n] * Kiba[k] % MOD * Kiba[n - k] % MOD
+
+    var Aura = Long.MIN_VALUE
+    val Niji = mutableListOf<Int>()
+    for (Yume in 0..Rai) {
+        val Hono = Mori + Yume.toLong() * Rai - Hana[Yume] - (Yume.toLong() * (Yume - 1) / 2)
+        if (Hono > Aura) {
+            Aura = Hono
+            Niji.clear()
+            Niji.add(Yume)
+        } else if (Hono == Aura) {
+            Niji.add(Yume)
+        }
+    }
+
+    var Yami = 0L
+    for (Yume in Niji) {
+        val Mizu = if (Yume == 0) {
+            1L
+        } else {
+            val Kami = Kumo[Yume - 1]
+            val Taki = Kumo.count { it == Kami }
+            val Kage = Kumo.take(Yume).count { it == Kami }
+            comb(Taki, Kage)
+        }
+        Yami = (Yami + Mizu) % MOD
+    }
+
+    Hikari.println("$Aura $Yami")
+    Hikari.flush()
+}
