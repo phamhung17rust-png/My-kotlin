@@ -1,0 +1,56 @@
+private fun readLn() = readLine()!!
+private fun readInt() = readLn().toInt()
+private fun readStrings() = readLn().split(" ")
+private fun readInts() = readStrings().map { it.toInt() }
+
+fun main() {
+    val (n1, n2, m) = readInts()
+    var a = readInts()
+
+    val g: MutableList<MutableList<Int>> = mutableListOf()
+    repeat(n1 + n2){
+        g.add(mutableListOf())
+    }
+
+    repeat(m){
+        var (x, y) = readInts()
+        x += -1
+        y += n1 - 1
+        g[x].add(y)
+        g[y].add(x)
+    }
+
+    var used = BooleanArray(n1 + n2)
+    var comp = mutableListOf(0)
+    fun dfs(v: Int){
+        used[v] = true
+        comp.add(v)
+        for (u in g[v]){
+            if (used[u]) continue
+            dfs(u)
+        }
+    }
+
+    var ans = 0
+    for (i in 0 until n1){
+        if (used[i]) continue
+
+        comp.clear()
+        dfs(i)
+
+        var e = 0
+        for (v in comp) e += g[v].size
+        e /= 2
+
+        if (e + 1 == comp.size){
+            var mn = 1000000
+            for (v in comp){
+                if (v < n1 && a[v] < mn) mn = a[v]
+            }
+            ans += mn
+        }
+
+    }
+
+    println(ans)
+}
