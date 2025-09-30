@@ -1,0 +1,118 @@
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.system.exitProcess
+
+
+fun main() {
+    MainJava().run()
+}
+
+class MainJava {
+    private fun solveTest() {
+        val s = readString()
+        var first = s[0]
+        var last = s[s.length - 1]
+        val indices = Array(26) { ArrayList<Int>() }
+        val n = s.length
+        for (i in 1..n - 2) {
+            indices[s[i].code - 'a'.code].add(i)
+        }
+
+        val answer = ArrayList<Int>()
+        val flag = first < last
+        if (!flag) {
+            val tmp = first
+            first = last
+            last = tmp
+        }
+        answer.add(0)
+        for (i in first.code - 'a'.code..last.code - 'a'.code) {
+            answer.addAll(indices[i])
+        }
+        answer.add(n - 1)
+        if (!flag) answer.reverse()
+        answer[0] = 0
+        answer[answer.size - 1] = n - 1
+
+        out.print(abs(first - last).toString() + " " + answer.size.toString() + "\n")
+        answer.forEach {
+            out.print((it + 1).toString() + " ")
+        }
+        out.print("\n")
+    }
+
+
+    @Throws(IOException::class)
+    fun solve() {
+        var t = readInt()
+        while (t-- > 0) solveTest()
+    }
+
+    private var `in` = BufferedReader(InputStreamReader(System.`in`))
+    private var out = PrintWriter(System.out)
+    private var tok = StringTokenizer("")
+
+    fun run() {
+        try {
+            solve()
+            out.flush()
+            out.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            exitProcess(-1)
+        }
+    }
+
+    @Throws(IOException::class)
+    fun readLine(): String {
+        return `in`.readLine()
+    }
+
+    var delimiter = " "
+
+    @Throws(IOException::class)
+    fun readString(): String {
+        while (!tok.hasMoreTokens()) {
+            val nextLine = readLine()
+            tok = StringTokenizer(nextLine)
+        }
+        return tok.nextToken(delimiter)
+    }
+
+    @Throws(IOException::class)
+    fun readIntArray(n: Int): IntArray {
+        val array = IntArray(n)
+        for (i in 0..<n) {
+            array[i] = readInt()
+        }
+        return array
+    }
+
+    @Throws(IOException::class)
+    fun readInt(): Int {
+        return readString().toInt()
+    }
+
+    fun sortIntArray(a: IntArray) {
+        val n = a.size
+        val arr = ArrayList<Int>(n)
+        for (j in a) arr.add(j)
+        arr.sort()
+        for (i in 0..<n) a[i] = arr[i]
+    }
+
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            MainJava().run()
+        }
+    }
+}
