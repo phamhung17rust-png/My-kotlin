@@ -1,0 +1,158 @@
+import java.lang.StringBuilder
+import kotlin.jvm.Throws
+
+class FastScanner(private val bufferSize: Int = 1 shl 16) {
+    private val buffer = ByteArray(bufferSize)
+    private var len = 0
+    private var ptr = 0
+
+    private fun readByte(): Int {
+        if (ptr >= len) {
+            len = System.`in`.read(buffer)
+            ptr = 0
+            if (len <= 0) return -1
+        }
+        return buffer[ptr++].toInt()
+    }
+
+    fun hasNext(): Boolean {
+        var c = readByte()
+        while (c <= 32 && c >= 0) c = readByte()
+        if (c == -1) return false
+        ptr-- // unread the non-space char
+        return true
+    }
+
+    @Throws(NoSuchElementException::class)
+    fun next(): String {
+        var c = readByte()
+        while (c <= 32 && c >= 0) c = readByte()
+        if (c == -1) throw NoSuchElementException("No more tokens")
+        val sb = StringBuilder()
+        while (c > 32) {
+            sb.append(c.toChar())
+            c = readByte()
+            if (c == -1) break
+        }
+        return sb.toString()
+    }
+
+    @Throws(NoSuchElementException::class)
+    fun nextLine(): String {
+        val sb = StringBuilder()
+        var c = readByte()
+        // If we're at EOF, return empty string
+        if (c == -1) return ""
+        // Read until newline. This does NOT skip a leading newline (so it returns an empty string if next char is '\n')
+        while (c != -1 && c != '\n'.code) {
+            if (c != '\r'.code) sb.append(c.toChar())
+            c = readByte()
+        }
+        return sb.toString()
+    }
+
+    @Throws(NoSuchElementException::class)
+    fun nextInt(): Int {
+        var c = readByte()
+        while (c <= 32 && c >= 0) c = readByte()
+        if (c == -1) throw NoSuchElementException("No more tokens")
+        var sign = 1
+        if (c == '-'.code) {
+            sign = -1
+            c = readByte()
+        }
+        var res = 0
+        while (c > 32 && c >= 0) {
+            res = res * 10 + (c - '0'.code)
+            c = readByte()
+        }
+        return res * sign
+    }
+
+    @Throws(NoSuchElementException::class)
+    fun nextLong(): Long {
+        var c = readByte()
+        while (c <= 32 && c >= 0) c = readByte()
+        if (c == -1) throw NoSuchElementException("No more tokens")
+        var sign = 1L
+        if (c == '-'.code) {
+            sign = -1L
+            c = readByte()
+        }
+        var res = 0L
+        while (c > 32 && c >= 0) {
+            res = res * 10 + (c - '0'.code)
+            c = readByte()
+        }
+        return res * sign
+    }
+
+    @Throws(NoSuchElementException::class)
+    fun nextDouble(): Double {
+        // For simplicity and correctness, parse the token as String then convert.
+        return next().toDouble()
+    }
+
+    fun nextIntArray(n: Int): IntArray {
+        val arr = IntArray(n)
+        for (i in 0 until n) arr[i] = nextInt()
+        return arr
+    }
+
+    fun nextLongArray(n: Int): LongArray {
+        val arr = LongArray(n)
+        for (i in 0 until n) arr[i] = nextLong()
+        return arr
+    }
+}
+// thanks chatgpt (this was written before contest obviously)
+//
+// I started learning kotlin 1 hour before contest >_<
+
+fun main(){
+    val fs = FastScanner()
+    val out = StringBuilder()
+
+    val n = fs.nextInt()
+
+    val ans = StringBuilder()
+    var cnt = 0;
+    for (i in 1 until (n + 1)){
+                
+        if (i % 2 == 1){
+            ans.append("pushback a[").append(i - 1).append("]\n")
+            cnt++
+            if (i > 1){
+                ans.append("popfront\n")
+                cnt++
+            }
+            ans.append("min\n")
+            cnt++
+
+            for (j in (i - 1) downTo 1){
+                ans.append("pushback a[").append(j - 1).append("]\n")
+                cnt++
+                ans.append("min\n")
+                cnt++
+            }
+        }
+        
+        if (i % 2 == 0){
+            ans.append("pushfront a[").append(i - 1).append("]\n")
+            cnt++
+            ans.append("min\n")
+            cnt++
+
+            for (j in (i - 1) downTo 1){
+                ans.append("popback\n")
+                cnt++
+                ans.append("min\n")
+                cnt++
+            }
+        }
+    }
+    
+    out.append(cnt).append('\n')
+    out.append(ans)
+    print(out.toString())
+}
