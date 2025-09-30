@@ -1,0 +1,104 @@
+import java.io.BufferedInputStream
+import java.util.Arrays
+import kotlin.math.*
+
+private class FS {
+    private val inb = BufferedInputStream(System.`in`)
+    private val buf = ByteArray(1 shl 16)
+    private var len = 0
+    private var ptr = 0
+    private fun rb(): Int {
+        if (ptr >= len) {
+            len = inb.read(buf)
+            ptr = 0
+            if (len <= 0) return -1
+        }
+        return buf[ptr++].toInt()
+    }
+    fun ni(): Int {
+        var c = rb()
+        while (c <= 32) c = rb()
+        var s = 1
+        if (c == '-'.code) { s = -1; c = rb() }
+        var x = 0
+        while (c > 32) {
+            x = x * 10 + (c - '0'.code)
+            c = rb()
+        }
+        return x * s
+    }
+}
+
+fun main() {
+    val fs = FS()
+    val t = fs.ni()
+    val out = StringBuilder()
+    repeat(t) {
+        val n = fs.ni()
+        val c = IntArray(n + 1)
+        repeat(n) { c[fs.ni()]++ }
+        var m = 0
+        for (i in 1..n) if (c[i] > 0) m++
+        val f = IntArray(m)
+        var p = 0
+        for (i in 1..n) if (c[i] > 0) f[p++] = c[i]
+        Arrays.sort(f)
+        for (i in 0 until m / 2) {
+            val tmp = f[i]; f[i] = f[m - 1 - i]; f[m - 1 - i] = tmp
+        }
+        val mf = if (m == 0) 0 else f[0]
+        val pref = LongArray(m + 1)
+        for (i in 1..m) pref[i] = pref[i - 1] + f[i - 1]
+        val cf = IntArray(mf + 1)
+        for (v in f) cf[v]++
+        val ge = IntArray(mf + 2)
+        for (r in mf downTo 1) ge[r] = ge[r + 1] + cf[r]
+        val S = IntArray(mf + 1)
+        for (r in 1..mf) S[r] = S[r - 1] + ge[r]
+        val best = LongArray(n + 1) { Long.MIN_VALUE / 4 }
+        val start = LongArray(n + 1) { Long.MIN_VALUE / 4 }
+        for (r in 0..mf) {
+            val tcnt = ge[r + 1]
+            val Sr = S[r]
+            val up = min(tcnt, n - r)
+            var k = 0
+            while (k <= up) {
+                val o = r + k
+                val v = Sr + pref[k] - 1L * r * k
+                if (v > best[o]) best[o] = v
+                k++
+            }
+            val pos = r + tcnt
+            if (pos <= n) {
+                val v = Sr + pref[tcnt] - 1L * r * tcnt
+                if (v > start[pos]) start[pos] = v
+            }
+        }
+        val const = LongArray(n + 1)
+        var cur = Long.MIN_VALUE / 4
+        for (o in 0..n) {
+            if (start[o] > cur) cur = start[o]
+            const[o] = cur
+        }
+        val maxr = IntArray(n + 1)
+        for (o in 0..n) {
+            var v = max(best[o], const[o])
+            if (v < 0) v = 0
+            if (v > n) v = n.toLong()
+            maxr[o] = v.toInt()
+        }
+        val resy = IntArray(n + 1)
+        var o = n
+        var y = n
+        while (y >= 1) {
+            while (o > 0 && maxr[o - 1] >= y) o--
+            resy[y] = o
+            y--
+        }
+        for (x in 0 until n) {
+            out.append(resy[n - x]).append(' ')
+        }
+        out.append('\n')
+    }
+    print(out.toString())
+}
