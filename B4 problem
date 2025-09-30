@@ -1,0 +1,101 @@
+import java.io.DataInputStream
+import java.lang.StringBuilder
+
+private fun readInts() = readLine()!!.split(' ').map { it.toInt() }
+
+internal class FastReade3r() {
+    private val inStream: DataInputStream = DataInputStream(System.`in`)
+    private val bufferSize = 1024
+    private var buffer = ByteArray(bufferSize)
+    private var bufferPointer = 0
+    private var bytesread = 0
+
+
+    fun getNextDigit(): Int {
+        var ret: Byte = readByte()
+        while (ret <= ' '.toByte()) ret = readByte()
+        return ret - '0'.toInt()
+    }
+
+    fun getDigitOrNegativeOne(): Int {
+        var ret: Byte = readByte()
+        if (ret <= ' '.toByte()) {
+            return -1
+        } else {
+            return ret - '0'.toInt()
+        }
+    }
+
+
+    fun getNextInt(): Int {
+        var ret = 0
+        var c: Byte = readByte()
+        while (c <= ' '.toByte()) c = readByte()
+        val neg = c == '-'.toByte()
+        if (neg) c = readByte()
+        do {
+            ret = ret * 10 + c - '0'.toInt()
+        } while (readByte().also({ c = it }) >= '0'.toByte() && c <= '9'.toByte())
+        return if (neg) -ret else ret
+    }
+
+    private fun fillBuffer() {
+        bytesread = inStream.read(buffer, 0, bufferSize)
+        bufferPointer = 0
+    }
+
+    fun readByte(): Byte {
+        if (bufferPointer == bytesread) {
+            fillBuffer()
+        }
+        return buffer[bufferPointer++]
+    }
+
+    fun close() {
+        inStream.close()
+    }
+}
+
+
+fun main() {
+    val rd = FastReade3r()
+    val sb = StringBuilder()
+
+
+    val testCases = rd.getNextInt()
+    for (i in 0 until testCases) {
+        val n = rd.getNextInt()
+        val maxDay = rd.getNextInt()
+        val max2Day = rd.getNextInt()
+
+        var minDay = max2Day - maxDay
+        if(minDay > maxDay){
+            minDay = maxDay
+        }
+
+        var res = 0
+        var lastMax = false
+        for (i in 0 until n){
+            val notBreak = rd.getNextDigit()
+            if (notBreak == 0){
+                lastMax = false
+            }else{
+                if (!lastMax){
+                    res += maxDay
+                    lastMax = true
+                }else{
+                    res += minDay
+                    lastMax = false
+                }
+            }
+
+        }
+        sb.append(res)
+        sb.append("\n")
+    }
+
+
+
+    print(sb.toString())
+    rd.close()
+}
