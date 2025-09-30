@@ -1,0 +1,97 @@
+fun main() {
+    val (n, m) = readLine()!!.split(" ").map { it.toInt() }
+    val x = IntArray(m)
+    val y = IntArray(m)
+    val edgeId = mutableMapOf<Pair<Int, Int>, Int>()
+    val inDeg = IntArray(n)
+    val outDeg = IntArray(n)
+
+    for (i in 0 until m) {
+        val (xi, yi) = readLine()!!.split(" ").map { it.toInt() }
+        x[i] = xi - 1
+        y[i] = yi - 1
+        edgeId[Pair(x[i], y[i])] = i
+        inDeg[y[i]]++
+        outDeg[x[i]]++
+    }
+
+    var c = 0
+    for (i in 0 until n) {
+        c = maxOf(c, inDeg[i], outDeg[i])
+    }
+
+    val color = Array(n * 2) { IntArray(c) { -1 } }
+    for (i in 0 until m) {
+        val a = x[i]
+        val b = y[i] + n
+        var ca = 0
+        while (color[a][ca] != -1) ca++
+        var cb = 0
+        while (color[b][cb] != -1) cb++
+        color[a][ca] = b
+        color[b][cb] = a
+        if (ca != cb) {
+            var cur = b
+            while (cur != -1) {
+                val temp = color[cur][cb]
+                color[cur][cb] = color[cur][ca]
+                color[cur][ca] = temp
+                cur = color[cur][cb]
+                val tempCa = ca
+                ca = cb
+                cb = tempCa
+            }
+        }
+    }
+
+    val ans = MutableList(m) { 0 }
+    for (i in 0 until n) {
+        for (j in 0 until c) {
+            if (color[i][j] != -1) {
+                ans[edgeId[Pair(i, color[i][j] - n)]!!] = j
+            }
+        }
+    }
+
+    val xsAdd = mutableListOf<Int>()
+    val ysAdd = mutableListOf<Int>()
+    var k = 0
+    for (i in 0 until c) {
+        val nxt = IntArray(n) { -1 }
+        val pre = IntArray(n) { -1 }
+        for (j in 0 until m) {
+            if (ans[j] == i) {
+                nxt[x[j]] = y[j]
+                pre[y[j]] = x[j]
+            }
+        }
+        val parts = mutableListOf<Pair<Int, Int>>()
+        for (j in 0 until n) {
+            if (pre[j] == -1) {
+                var l = j
+                var r = j
+                while (nxt[r] != -1) r = nxt[r]
+                parts.add(Pair(l, r))
+            }
+        }
+        val p = parts.size
+        k += p
+        for (j in 0 until p) {
+            xsAdd.add(parts[j].second)
+            ysAdd.add(parts[(j + 1) % p].first)
+        }
+        for (j in 0 until p) {
+            ans += i
+        }
+    }
+
+    println(k)
+    for (i in 0 until k) {
+        println("${xsAdd[i] + 1} ${ysAdd[i] + 1}")
+    }
+    println(c)
+    for (x in ans) {
+        print("${x + 1} ")
+    }
+    println()
+}
