@@ -1,0 +1,13 @@
+fun main() {
+    val input = readLine()!!.toInt()
+    val s = readLine()!!
+
+    var i = 0
+    var j = 2
+    while (i < input) {
+        print(s[i])
+        i += j
+        j++
+    }
+    println()
+}
