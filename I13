@@ -1,0 +1,211 @@
+import kotlin.math.min
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.StringTokenizer
+
+const val K = 17
+const val N = K * 2
+const val MOD = 998244353
+
+fun add(x: Int, y: Int): Int {
+    return ((x + y) % MOD + MOD) % MOD
+}
+
+fun mul(x: Int, y: Int): Int {
+    return (x.toLong() * y % MOD).toInt()
+}
+fun binpow(x: Int, y: Int): Int {
+    var z = 1
+    var base = x
+    var exponent = y
+    while (exponent > 0) {
+        if (exponent % 2 == 1) z = mul(z, base)
+        base = mul(base, base)
+        exponent /= 2
+    }
+    return z
+}
+
+data class State(
+    var unpaired: Int = 0,
+    var unpairedLess: Int = 0,
+    var pairedLess: Int = 0,
+    var flag: Int = 0,
+    var ways: Int = 0
+)
+
+fun comp(a: State, b: State): Boolean {
+    if (a.unpaired != b.unpaired) return a.unpaired < b.unpaired
+    if (a.unpairedLess != b.unpairedLess) return a.unpairedLess < b.unpairedLess
+    if (a.pairedLess != b.pairedLess) return a.pairedLess < b.pairedLess
+    return a.flag < b.flag
+}
+
+fun fix(v: MutableList<State>) {
+    v.sortWith(compareBy(State::unpaired).thenBy { it.unpairedLess }.thenBy { it.pairedLess }.thenBy { it.flag })
+    val v2 = mutableListOf<State>()
+    for (s in v) {
+        if (s.ways == 0) continue
+        if (v2.isEmpty() || comp(v2.last(), s)) {
+            v2.add(s)
+        } else {
+            v2.last().ways = add(v2.last().ways, s.ways)
+        }
+    }
+    v.clear()
+    v.addAll(v2)
+}
+
+val fact = IntArray(N + 5)
+val rfact = IntArray(N + 5)
+lateinit var g: Array<MutableList<Int>>
+lateinit var dp: Array<MutableList<MutableList<State>>>
+var nGlobal = 0
+
+fun choose(x: Int, y: Int): Int {
+    if (y < 0 || y > x) return 0
+    return mul(fact[x], mul(rfact[y], rfact[x - y]))
+}
+
+fun merge2(x: MutableList<State>, y: MutableList<State>): MutableList<State> {
+    val res = mutableListOf<State>()
+    for (a in x) {
+        for (b in y) {
+            val maxPairLess = min(a.unpairedLess, b.unpairedLess)
+            val maxPairGreater = min(a.unpaired - a.unpairedLess, b.unpaired - b.unpairedLess)
+            for (pairLess in 0..maxPairLess) {
+                for (pairGreater in 0..maxPairGreater) {
+                    var numOfChoices = mul(fact[pairLess], fact[pairGreater])
+                    numOfChoices = mul(numOfChoices, choose(a.unpairedLess, pairLess))
+                    numOfChoices = mul(numOfChoices, choose(a.unpaired - a.unpairedLess, pairGreater))
+                    numOfChoices = mul(numOfChoices, choose(b.unpairedLess, pairLess))
+                    numOfChoices = mul(numOfChoices, choose(b.unpaired - b.unpairedLess, pairGreater))
+                    numOfChoices = mul(numOfChoices, a.ways)
+                    numOfChoices = mul(numOfChoices, b.ways)
+                    var flag = 0
+                    if (a.unpairedLess > 0 || b.unpairedLess > 0) flag = 1
+                    if (a.unpairedLess < a.unpaired || b.unpairedLess < b.unpaired) flag = 2
+                    val newState = State(
+                        a.unpaired + b.unpaired - 2 * pairLess - 2 * pairGreater,
+                        a.unpairedLess + b.unpairedLess - pairLess * 2,
+                        a.pairedLess + b.pairedLess + pairLess,
+                        maxOf(flag, a.flag),
+                        numOfChoices
+                    )
+                    res.add(newState)
+                }
+            }
+        }
+    }
+    fix(res)
+    return res
+}
+
+fun merge(a: MutableList<MutableList<State>>, b: MutableList<MutableList<State>>): MutableList<MutableList<State>> {
+    val res = MutableList(2) { mutableListOf<State>() }
+    for (i in 0..1) {
+        for (j in 0..1) {
+            if (i == 1 && j == 1) continue
+            val cur = merge2(a[i], b[j])
+            res[i + j].addAll(cur)
+        }
+    }
+    for (i in 0..1) fix(res[i])
+    return res
+}
+
+fun getDp(s: MutableList<State>, cntLess: Int, flag: Int): Int {
+    for (x in s) {
+        if (x.unpaired == 0 && x.pairedLess == cntLess && x.flag == flag) return x.ways
+    }
+    return 0
+}
+
+fun forceSpecial(a: MutableList<MutableList<State>>): MutableList<MutableList<State>> {
+    val res = MutableList(2) { mutableListOf<State>() }
+    for (x in a[0]) {
+        when (x.flag) {
+            0 -> res[1].add(x)
+            1 -> {
+                res[0].add(x.copy())
+                res[1].add(x.copy())
+            }
+            else -> res[0].add(x)
+        }
+    }
+    for (x in a[1]) {
+        res[1].add(x)
+    }
+    fix(res[0])
+    fix(res[1])
+    return res
+}
+
+fun dfs(v: Int, p: Int) {
+    val children = mutableListOf<Int>()
+    for (x in g[v]) {
+        if (x != p) {
+            dfs(x, v)
+            children.add(x)
+        }
+    }
+    if (g[v].size == 1 && v != p) {
+        val s1 = State(1, 1, 0, 0, 1)
+        val s2 = State(1, 0, 0, 0, 1)
+        dp[v] = mutableListOf(mutableListOf(s1, s2), mutableListOf())
+        fix(dp[v][0])
+        return
+    }
+    var aux = MutableList(2) { mutableListOf<State>() }
+    aux[0].add(State(0, 0, 0, 0, 1))
+    for (c in children) {
+        aux = merge(aux, dp[c])
+    }
+    dp[v] = forceSpecial(aux)
+}
+
+fun main() {
+    val reader = BufferedReader(InputStreamReader(System.`in`))
+    var tokenizer: StringTokenizer? = null
+    fun nextToken(): String {
+        while (tokenizer == null || !tokenizer!!.hasMoreTokens()) {
+            tokenizer = StringTokenizer(reader.readLine())
+        }
+        return tokenizer!!.nextToken()
+    }
+    nGlobal = nextToken().toInt()
+    g = Array(N) { mutableListOf() }
+    dp = Array(N) { mutableListOf() }
+    for (i in 0 until nGlobal - 1) {
+        val x = nextToken().toInt()
+        val y = nextToken().toInt()
+        g[x - 1].add(y - 1)
+        g[y - 1].add(x - 1)
+    }
+    val leaves = mutableListOf<Int>()
+    val nonLeaves = mutableListOf<Int>()
+    for (i in 0 until nGlobal) {
+        if (g[i].size == 1) leaves.add(i) else nonLeaves.add(i)
+    }
+    fact[0] = 1
+    for (i in 1..nGlobal) fact[i] = mul(fact[i - 1], i)
+    for (i in 0..nGlobal) rfact[i] = binpow(fact[i], MOD - 2)
+    var ans = 0
+    if (leaves.size % 2 == 0) {
+        val root = nonLeaves[0]
+        dfs(root, root)
+        ans = mul(fact[leaves.size / 2], getDp(dp[root][0], 0, 2))
+        println("${leaves.size / 2} $ans")
+    } else {
+        print("${(leaves.size + 1) / 2} ")
+        var total = 0
+        for (x in leaves) {
+            dfs(x, x)
+            for (j in 0..leaves.size / 2) {
+                val cur = getDp(dp[x][1], j, 0)
+                total = add(total, mul(cur, mul(fact[j], fact[leaves.size / 2 - j])))
+            }
+        }
+        println(total)
+    }
+}
