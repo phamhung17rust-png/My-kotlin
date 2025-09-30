@@ -1,0 +1,170 @@
+import java.io.*
+import java.util.*
+
+// -----------MyScanner class for faster input----------
+class FastIO : PrintWriter {
+    private var stream: InputStream
+    private val buf = ByteArray(1 shl 16)
+    private var curChar = 0
+    private var numChars = 0
+
+    // standard input
+    @JvmOverloads
+    constructor(i: InputStream = System.`in`, o: OutputStream? = System.out) : super(o) {
+        stream = i
+    }
+
+    // file input
+    constructor(i: String?, o: String?) : super(FileWriter(o)) {
+        stream = FileInputStream(i)
+    }
+
+    // throws InputMismatchException() if previously detected end of file
+    private fun nextByte(): Int {
+        if (numChars == -1) throw InputMismatchException()
+        if (curChar >= numChars) {
+            curChar = 0
+            numChars =
+                    try {
+                        stream.read(buf)
+                    } catch (e: IOException) {
+                        throw InputMismatchException()
+                    }
+            if (numChars == -1) return -1 // end of file
+        }
+        return buf[curChar++].toInt()
+    }
+
+    // to read in entire lines, replace c <= ' '
+    // with a function that checks whether c is a line break
+    operator fun next(): String {
+        var c: Int
+        do {
+            c = nextByte()
+        } while (c <= ' '.code)
+        val res = StringBuilder()
+        do {
+            res.appendCodePoint(c)
+            c = nextByte()
+        } while (c > ' '.code)
+        return res.toString()
+    }
+
+    fun nextLine(): String {
+        var c: Int
+        do {
+            c = nextByte()
+        } while (c < '\n'.code)
+        val res = StringBuilder()
+        do {
+            res.appendCodePoint(c)
+            c = nextByte()
+        } while (c > '\n'.code)
+        return res.toString()
+    }
+
+    fun nextInt(): Int { // nextLong() would be implemented similarly
+        var c: Int
+        do {
+            c = nextByte()
+        } while (c <= ' '.code)
+        var sgn = 1
+        if (c == '-'.code) {
+            sgn = -1
+            c = nextByte()
+        }
+        var res = 0
+        do {
+            if (c < '0'.code || c > '9'.code) throw InputMismatchException()
+            res = 10 * res + c - '0'.code
+            c = nextByte()
+        } while (c > ' '.code)
+        return res * sgn
+    }
+
+    fun nextDouble(): Double {
+        return next().toDouble()
+    }
+}
+
+class Solution(
+        private val n: Int,
+        private val a: IntArray,
+        private val opK: IntArray,
+        private val opD: IntArray,
+        private val output: MutableList<String>
+) {
+    fun solve() {
+        val start = IntArray(n)
+        val segs = TreeSet<Int>()
+        var left = 0
+        for (i in 0 until n) {
+            if (a[i] < a[left]) {
+                segs.add(i - 1)
+                start[i - 1] = left
+                left = i
+            }
+        }
+        segs.add(n - 1)
+        start[n - 1] = left
+
+        val ans = IntArray(opK.size)
+        for (i in 0 until opK.size) {
+            val k = opK[i] - 1
+            val d = opD[i]
+            val r = segs.tailSet(k, true).first()
+            val l = start[r]
+            val currentSpeed = a[l]
+            a[k] -= d
+
+            if (a[k] < currentSpeed) {
+                if (k > l) {
+                    segs.add(k - 1)
+                    start[k - 1] = l
+                }
+
+                val iter = segs.tailSet(k, true).iterator()
+                var rightMost = r
+
+                while (iter.hasNext()) {
+                    val nextSeg = iter.next()
+                    if (a[k] <= a[start[nextSeg]]) {
+                        iter.remove()
+                        rightMost = nextSeg
+                    } else {
+                        break
+                    }
+                }
+
+                segs.add(rightMost)
+                start[rightMost] = k
+            }
+
+            ans[i] = segs.size
+        }
+
+        output.add(ans.joinToString(" "))
+    }
+}
+
+fun main() {
+    val io = FastIO()
+    val t = io.nextInt()
+    val output = mutableListOf<String>()
+    repeat(t) {
+        val n = io.nextInt()
+        val m = io.nextInt()
+        val a = IntArray(n) { io.nextInt() }
+        val opK = IntArray(m)
+        val opD = IntArray(m)
+
+        for (i in 0 until m) {
+            opK[i] = io.nextInt()
+            opD[i] = io.nextInt()
+        }
+        val solution = Solution(n, a, opK, opD, output)
+        solution.solve()
+    }
+
+    println(output.joinToString("\n"))
+}
