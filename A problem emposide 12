@@ -1,0 +1,130 @@
+import java.io.*
+
+const val interactive = false
+
+object Reader {
+    private const val BS = 1 shl 16
+    private const val NC = 0.toChar()
+    private val buf = ByteArray(BS)
+    private var bId = 0
+    private var size = 0
+    private var c = NC
+    private var lastTC: String = ""
+    private var IN: BufferedInputStream = BufferedInputStream(System.`in`, BS)
+    val OUT: PrintWriter = PrintWriter(System.out)
+    private val char: Char
+        get() {
+            if (interactive) {
+                val c = System.`in`.read()
+                return if (c == -1) NC else c.toChar()
+            }
+            while (bId == size) {
+                size = IN.read(buf)
+                if (size == -1) return NC
+                bId = 0
+            }
+            return buf[bId++].toInt().toChar()
+        }
+
+    fun nextLong(): Long {
+        var neg = false
+        if (c == NC) c = char
+        while (c < '0' || c > '9') {
+            if (c == '-') neg = true
+            if (c == NC) throw Error("Bad Input")
+            c = char
+        }
+        var res = 0L
+        while (c in '0'..'9') {
+            res = (res shl 3) + (res shl 1) + (c - '0')
+            c = char
+        }
+        return if (neg) -res else res
+    }
+
+    fun nextString(): String {
+        val ret = StringBuilder()
+        while (true) {
+            c = char
+            if (c == NC) throw Error("Bad Input")
+            if (!isWhitespace(c)) {
+                break
+            }
+        }
+        do {
+            ret.append(c)
+            c = char
+        } while (!isWhitespace(c))
+        return ret.toString()
+    }
+
+    private fun isWhitespace(c: Char): Boolean {
+        return c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == NC
+    }
+
+    fun flush() {
+        OUT.flush()
+    }
+
+    fun takeString(str: String) {
+        lastTC = str
+        IN = BufferedInputStream(lastTC.byteInputStream(), BS)
+    }
+
+    fun takeFile(name: String) {
+        IN = BufferedInputStream(File(name).inputStream(), BS)
+    }
+}
+
+fun put(aa: Any) {
+    Reader.OUT.println(aa)
+    if (interactive) {
+        Reader.flush()
+    }
+}
+
+fun put(vararg x: Any) {
+    val count = x.size
+    for ((pt, c) in x.withIndex()) {
+        Reader.OUT.print(c)
+        if (pt + 1 != count) Reader.OUT.print(" ")
+    }
+    Reader.OUT.print("\n")
+    if (interactive) {
+        Reader.flush()
+    }
+}
+
+fun done() = Reader.OUT.close()
+val ri: Int
+    get() {
+        val ans = rl; if (ans > Int.MAX_VALUE) {
+            IntArray(1000000000);error("Input Overflow")
+        };return ans.toInt()
+    }
+val rl: Long get() = Reader.nextLong()
+val rs: String get() = Reader.nextString()
+fun rai(n: Int): IntArray = IntArray(n) { ri }
+fun ral(n: Int): LongArray = LongArray(n) { rl }
+
+fun ai(n: Int): IntArray = IntArray(n)
+fun al(n: Int): LongArray = LongArray(n)
+fun li(n: Int): MutableList<Int> = MutableList(n) { 0 }
+fun ll(n: Int): MutableList<Long> = MutableList(n) { 0L }
+
+fun solve() {
+    val (a, b, c) = rai(3)
+    var s = ""
+    for (i in 0..<a) s += ('0' + i)
+    for (i in 0..<b) s += ('A' + i)
+    for (i in 0..<c) s += ('a' + i)
+    put(s)
+}
+
+fun main() {
+    repeat(ri) {
+        solve()
+    }
+
+    done()
+}
