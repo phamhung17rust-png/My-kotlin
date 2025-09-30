@@ -1,0 +1,146 @@
+import java.io.IOException
+import java.io.PrintWriter
+import java.util.*
+
+//private fun readLn() = readLine()!!
+//private fun readInt() = readLn().toInt()
+//private fun readStrings() = readLn().split(" ")
+//private fun readInts() = readStrings().map { it.toInt() }
+//fun main() {
+//    var cas = readInt()
+//    while (cas-- > 0) {
+//
+//    }
+//}
+class Main {
+    var `is` = System.`in`
+    var out = PrintWriter(System.out)
+    val MOD = 1e9.toInt() + 7
+    val INF = 2e9.toInt()
+    fun solve() {
+        var cas = ni()
+        val V = IntArray(200000 + 555)
+        while (cas-- > 0) {
+            val n = ni()
+            for (i in 0 until n) V[i] = ni()
+            var can = false
+            var i = 0
+            while (i + 1 < n) {
+                if ((V[i + 1] - V[i]) % 2 == 0) {
+                    can = true
+                    break
+                }
+                i++
+            }
+            if (can) {
+                out.println("YES")
+            } else {
+                out.println("NO")
+            }
+        }
+    }
+
+    fun run() {
+        solve()
+        out.flush()
+    }
+
+    private val inbuf = ByteArray(1024)
+    var lenbuf = 0
+    var ptrbuf = 0
+    private fun readByte(): Int {
+        if (lenbuf == -1) throw InputMismatchException()
+        if (ptrbuf >= lenbuf) {
+            ptrbuf = 0
+            lenbuf = try {
+                `is`.read(inbuf)
+            } catch (e: IOException) {
+                throw InputMismatchException()
+            }
+            if (lenbuf <= 0) return -1
+        }
+        return inbuf[ptrbuf++].toInt()
+    }
+
+    private fun isSpaceChar(c: Int): Boolean {
+        return !(c >= 33 && c <= 126)
+    }
+
+    private fun skip(): Int {
+        var b: Int
+        while (readByte().also { b = it } != -1 && isSpaceChar(b));
+        return b
+    }
+
+    private fun ns(): String {
+        var b = skip()
+        val sb = StringBuilder()
+        while (!isSpaceChar(b)) { // when nextLine, (isSpaceChar(b) && b != ' ')
+            sb.appendCodePoint(b)
+            b = readByte()
+        }
+        return sb.toString()
+    }
+
+    private fun ni(): Int {
+        var num = 0
+        var b: Int
+        var minus = false
+        while (readByte().also { b = it } != -1 && !(b >= '0'.toInt() && b <= '9'.toInt() || b == '-'.toInt()));
+        if (b == '-'.toInt()) {
+            minus = true
+            b = readByte()
+        }
+        while (true) {
+            num = if (b >= '0'.toInt() && b <= '9'.toInt()) {
+                num * 10 + (b - '0'.toInt())
+            } else {
+                return if (minus) -num else num
+            }
+            b = readByte()
+        }
+    }
+
+    private fun nl(): Long {
+        var num: Long = 0
+        var b = 0
+        var minus = false
+        while (readByte().also { b = it } != -1 && !(b >= '0'.toInt() && b <= '9'.toInt() || b == '-'.toInt()));
+        if (b == '-'.toInt()) {
+            minus = true
+            b = readByte()
+        }
+        while (true) {
+            num = if (b >= '0'.toInt() && b <= '9'.toInt()) {
+                num * 10 + (b - '0'.toInt())
+            } else {
+                return if (minus) -num else num
+            }
+            b = readByte()
+        }
+    }
+
+    companion object {
+        @Throws(Exception::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            Main().run()
+        }
+
+        fun safeSort(a: IntArray, n: Int) {
+            val gen = Random()
+            for (i in 0 until n) {
+                val ind = gen.nextInt(n - i) + i
+                val d = a[i]
+                a[i] = a[ind]
+                a[ind] = d
+            }
+            Arrays.sort(a)
+        }
+    }
+}
+
+
+fun main() {
+    Main().run()
+}
