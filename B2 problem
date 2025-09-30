@@ -1,0 +1,152 @@
+import java.io.*
+import java.util.*
+ 
+fun main(args: Array<String>) {
+    Solver().solve()
+}
+ 
+internal class Solver {
+    var io = IO(System.`in`, System.out)
+ 
+    @Throws(Exception::class)
+    fun solve() {
+        val n = io.nextInt()
+        val arr = IntArray(n)
+        var i = 0
+        var mx: Long = 0
+        var mx_ind: Long = -1
+        i = 0
+        while (i < n) {
+            arr[i] = io.nextInt()
+            if (mx <= arr[i]) {
+                mx = arr[i].toLong()
+                mx_ind = i.toLong()
+            }
+            i++
+        }
+        io.println((mx - 1) * n + (mx_ind + 1))
+        io.flush()
+    }
+}
+ 
+ 
+internal class IO {
+ 
+ 
+    constructor(`is`: InputStream, os: OutputStream) {
+        try {
+            `in` = `is`
+            bw = BufferedWriter(OutputStreamWriter(os))
+        } catch (e: Exception) {
+        }
+ 
+    }
+ 
+    constructor(inputFile: String, outputFile: String) {
+        try {
+            `in` = FileInputStream(inputFile)
+            bw = BufferedWriter(OutputStreamWriter(
+                    FileOutputStream(outputFile)))
+        } catch (e: Exception) {
+        }
+ 
+    }
+ 
+    @Throws(Exception::class)
+    fun scan(): Int {
+        if (index >= total) {
+            index = 0
+            total = `in`!!.read(buf)
+            if (total <= 0)
+                return -1
+        }
+        return buf[index++].toInt()
+    }
+ 
+    @Throws(Exception::class)
+    operator fun next(): String {
+        var c: Int
+        c = scan()
+        while (c <= 32) {
+            c = scan()
+        }
+        val sb = StringBuilder()
+        while (c > 32) {
+            sb.append(c.toChar())
+            c = scan()
+        }
+        return sb.toString()
+    }
+ 
+    @Throws(Exception::class)
+    fun nextInt(): Int {
+        var c: Int
+        var `val` = 0
+        c = scan()
+        while (c <= 32) {
+            c = scan()
+        }
+        val neg = c == '-'.toInt()
+        if (c == '-'.toInt() || c == '+'.toInt())
+            c = scan()
+        while (c >= '0'.toInt() && c <= '9'.toInt()) {
+            `val` = (`val` shl 3) + (`val` shl 1) + (c and 15)
+            c = scan()
+        }
+        return if (neg) -`val` else `val`
+    }
+ 
+    @Throws(Exception::class)
+    fun nextLong(): Long {
+        var c: Int
+        var `val`: Long = 0
+        c = scan()
+        while (c <= 32) {
+            c = scan()
+        }
+        val neg = c == '-'.toInt()
+        if (c == '-'.toInt() || c == '+'.toInt())
+            c = scan()
+        while (c >= '0'.toInt() && c <= '9'.toInt()) {
+            `val` = (`val` shl 3) + (`val` shl 1) + (c and 15).toLong()
+            c = scan()
+        }
+        return if (neg) -`val` else `val`
+    }
+ 
+    @Throws(Exception::class)
+    fun print(a: Any) {
+        bw!!.write(a.toString())
+    }
+ 
+    @Throws(Exception::class)
+    fun printsp(a: Any) {
+        print(a)
+        bw!!.write(" ")
+    }
+ 
+    @Throws(Exception::class)
+    fun println() {
+        bw!!.write("\n")
+    }
+ 
+    @Throws(Exception::class)
+    fun println(a: Any) {
+        print(a)
+        println()
+    }
+ 
+    @Throws(Exception::class)
+    fun flush() {
+        bw!!.flush()
+        bw!!.close()
+    }
+ 
+    companion object {
+        var buf = ByteArray(2048)
+        var index: Int = 0
+        var total: Int = 0
+        var `in`: InputStream? = null
+        var bw: BufferedWriter? = null
+    }
+}
