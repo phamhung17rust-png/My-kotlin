@@ -1,0 +1,146 @@
+import java.io.*;
+import java.io.BufferedReader
+import java.lang.Exception
+import java.util.*
+import javax.print.attribute.standard.PrinterIsAcceptingJobs
+ 
+fun main(args: Array<String>) {
+    if (args.isNotEmpty() && args.first() == "file") {
+        out = PrintWriter(FileWriter("output.txt"))
+        reader = BufferedReader(FileReader("input.txt"))
+        do {
+            solve()
+            out.println("\n")
+            out.flush()
+        } while (reader.readLine() != null)
+    } else {
+        reader = BufferedReader(InputStreamReader(System.`in`))
+        out = PrintWriter(OutputStreamWriter(System.out))
+        solve()
+    }
+    reader.close()
+    out.close()
+}
+ 
+lateinit var out: PrintWriter
+lateinit var reader: BufferedReader
+var tokenizer: StringTokenizer? = null
+fun read(): String {
+    while (tokenizer == null || !tokenizer!!.hasMoreTokens()) {
+        tokenizer = StringTokenizer(readLn())
+    }
+    return tokenizer!!.nextToken()
+}
+ 
+fun readInt() = read().toInt()
+fun readLong() = read().toLong()
+fun readLn() = reader.readLine()!!
+fun readInts() = readLn().split(" ").map { it.toInt() }
+fun readInts(sz: Int) = Array(sz) { readInt() }
+fun readLongs() = readLn().split(" ").map { it.toLong() }
+fun readLongs(sz: Int) = Array(sz) { readLong() }
+fun print(b: Boolean) = out.print(b)
+fun print(i: Int) = out.print(i)
+fun print(d: Double) = out.print(d)
+fun print(l: Long) = out.print(l)
+fun print(s: String) = out.print(s)
+fun print(message: Any?) = out.print(message)
+fun print(a: Array<Int>) = a.forEach { print("$it ") }
+fun <T> print(a: Array<out T>) = a.forEach { print("$it ") }
+fun <T> print(a: Collection<T>) = a.forEach { print("$it ") }
+fun println(b: Boolean) = out.println(b)
+fun println(i: Int) = out.println(i)
+fun println(d: Double) = out.println(d)
+fun println(l: Long) = out.println(l)
+fun println(s: String) = out.println(s)
+fun println() = out.println()
+fun println(message: Any?) = out.println(message)
+fun <T> println(a: Array<out T>) {
+    a.forEach { print("$it ") }
+    println()
+}
+ 
+fun println(a: IntArray) {
+    a.forEach { print("$it ") }
+    println()
+}
+ 
+fun <T> println(a: Collection<T>) {
+    a.forEach { print("$it ") }
+    println()
+}
+ 
+const val M7 = 1000000007L
+const val M9 = 1000000009L
+const val MFFT = 998244353L
+fun zero(sz: Int) = IntArray(sz)
+fun zeroL(sz: Int) = LongArray(sz)
+fun <T> init(vararg elements: T) = elements
+fun VI(n: Int = 0, init: Int = 0) = MutableList(n) { init }
+fun VVI(n: Int = 0, m: Int = 0, init: Int = 0) = MutableList(n) { VI(m, init) }
+fun <T1 : Comparable<T1>, T2 : Comparable<T2>> pairCmp(): Comparator<Pair<T1, T2>> {
+    return Comparator { a, b ->
+        val res = a.first.compareTo(b.first)
+        if (res == 0) a.second.compareTo(b.second) else res
+    }
+}
+//endregion
+ 
+ 
+fun solve() {
+    var (n, m) = readInts(2)
+    var ans = IntArray(n) { -1 }
+    var d = 0
+    var a = mutableListOf<Pair<Int, Int>>()
+    var sm = 0
+    for(i in 0 until n){
+        var (k, t) = readInts(2)
+        if (t == 1){
+            ans[i] = d
+            d += k
+        } else {
+            a.add(Pair(k, i))
+            sm += k
+        }
+    }
+    if (d > m){
+        println(-1)
+        return
+    }
+    var rest = m - d
+    var dp = IntArray((rest + 1) / 2 + 1){-1}
+    for(i in a.indices){
+        var (k, ind) = a[i]
+        for(j in dp.indices.reversed()){
+            if ((j == 0 || dp[j] != -1) && j + k < dp.size && dp[j + k] == -1){
+                dp[j + k] = i
+            }
+        }
+    }
+    var mx = (rest + 1) / 2
+    while(mx > 0 && dp[mx] == -1) mx--
+ 
+    if (sm - mx > rest / 2){
+        println(-1)
+        return
+    }
+ 
+    var was = BooleanArray(a.size)
+    while(mx > 0){
+        was[dp[mx]] = true
+        mx -= a[dp[mx]].first
+    }
+    var d2 = d + 1
+    for(i in a.indices){
+        if (was[i]){
+            ans[a[i].second] = d
+            d += 2 * a[i].first
+        } else {
+            ans[a[i].second] = d2
+            d2 += 2 * a[i].first
+        }
+    }
+    for(v in ans){
+        print("${v + 1} ")
+    }
+}
