@@ -1,0 +1,48 @@
+fun main() {
+    val t = readln().toInt()
+    for (tc in 1..t) {
+        val (a, b) = readln().split(" ")
+        if (a == b) {
+            println('=')
+            continue
+        }
+        val la = a.last()
+        val lb = b.last()
+        if (la != lb) {
+            when (la) {
+                'S' -> {
+                    println('<')
+                    continue
+                }
+
+                'L' -> {
+                    println('>')
+                    continue
+                }
+            }
+            when (lb) {
+                'S' -> {
+                    println('>')
+                    continue
+                }
+
+                'L' -> {
+                    println('<')
+                    continue
+                }
+            }
+        } else if (la == 'S') {
+            if (a.length > b.length) {
+                println('<')
+            } else {
+                println('>')
+            }
+        } else {
+            if (a.length > b.length) {
+                println('>')
+            } else {
+                println('<')
+            }
+        }
+    }
+}
