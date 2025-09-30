@@ -1,0 +1,64 @@
+import java.io.BufferedInputStream
+fun main(){
+    val bis=BufferedInputStream(System.`in`)
+    val buf=ByteArray(1 shl 16)
+    var len=0
+    var ptr=0
+    fun readByte():Int{
+        if(ptr>=len){
+            len=bis.read(buf)
+            ptr=0
+            if(len<=0) return -1
+        }
+        return buf[ptr++].toInt()
+    }
+    fun nextLong():Long{
+        var c=readByte()
+        while(c<=32 && c>=0) c=readByte()
+        var neg=false
+        if(c==45){ neg=true; c=readByte() }
+        var x=0L
+        while(c>32){
+            x = x*10 + (c - 48)
+            c=readByte()
+        }
+        return if(neg) -x else x
+    }
+    val t = nextLong().toInt()
+    val sb=StringBuilder()
+    for(_i in 0 until t){
+        val n = nextLong().toInt()
+        val k = nextLong()
+        var sum = 0L
+        var mx = Long.MIN_VALUE
+        var mn = Long.MAX_VALUE
+        val arr = LongArray(n)
+        for(i in 0 until n){
+            val v = nextLong()
+            arr[i]=v
+            sum += v
+            if(v>mx) mx=v
+            if(v<mn) mn=v
+        }
+        val need = mx * n - sum
+        if(k < need){
+            sb.append("-1\n")
+            continue
+        }
+        val H = (k + sum) / n
+        if(H == mn){
+            sb.append("0\n")
+            continue
+        }
+        var sn = 0L
+        var c = 0L
+        for(v in arr){
+            if(v>mn) sn += (H - v)
+            else c++
+        }
+        val add = (c - 1L) * (H - mn - 1L)
+        val ans = sn + add
+        sb.append(ans).append('\n')
+    }
+    print(sb.toString())
+}
