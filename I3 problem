@@ -1,0 +1,110 @@
+import java.io.*
+import java.util.*
+import kotlin.math.*
+
+const val SIZE = 100100
+
+val t = IntArray(SIZE * 4) {-1}
+
+fun Push(v : Int, tl : Int, tr : Int) {
+    if (t[v] == -1) return
+    if (tl + 1 < tr) {
+        t[v * 2 + 1] = t[v]
+        t[v * 2 + 2] = t[v]
+        t[v] = -1
+    }
+}
+
+fun Update(v : Int, tl : Int, tr : Int, l : Int, r : Int, value : Int) {
+    Push(v, tl, tr)
+    if (tl >= r || tr <= l) return
+    if (tl >= l && tr <= r) {
+        t[v] = value
+        Push(v, tl, tr)
+    } else {
+        val tm = (tl + tr) shr 1
+        Update(v * 2 + 1, tl, tm, l, r, value)
+        Update(v * 2 + 2, tm, tr, l, r, value)
+    }
+}
+
+fun Get(v : Int, tl : Int, tr : Int, index : Int) : Int {
+    Push(v, tl, tr)
+    return if (tl + 1 == tr) {
+        t[v]
+    } else {
+        val tm = (tl + tr) shr 1
+        if (index < tm) {
+            Get(v * 2 + 1, tl, tm, index)
+        } else {
+            Get(v * 2 + 2, tm, tr, index)
+        }
+    }
+}
+
+
+fun solve() {
+    val n = readInt()
+    val d = readInt()
+    val l = IntArray(n)
+    val r = IntArray(n)
+    val arr = Array<TreeSet<Int>>(n + 1){TreeSet()}
+    val results = IntArray(n) { 0 }
+    var answer = 0
+    for (i in range(n)) {
+        l[i] = readInt() - 1
+        r[i] = readInt() - 1
+        val leftBorder = if (l[i] > 0) Get(0, 0, d - 1, l[i] - 1) else -1
+        val rightBorder = if (r[i] < d - 1) Get(0, 0, d - 1, r[i]) else -1
+        answer++
+        var h = 0
+        if (leftBorder != -1) {
+            h = max(h, results[leftBorder] + 1)
+        }
+        if (rightBorder != -1) {
+            h = max(h, results[rightBorder] + 1)
+        }
+        var j = h
+        while (true) {
+            var it = arr[j].ceiling(l[i])
+            var good = false
+            while (it != null) {
+                if (it <= r[i]) {
+                    arr[j].remove(it)
+                    answer--
+                } else {
+                    break
+                }
+                it = arr[j].ceiling(l[i])
+                good = true
+            }
+            j++
+            if (!good || j == n) break
+        }
+        Update(0, 0, d - 1, l[i], r[i], i)
+        arr[h].add(l[i])
+        results[i] = h
+        out.print("${answer}\n")
+    }
+}
+
+val fileName = ""
+var reader = BufferedReader(InputStreamReader(System.`in`))
+var out = PrintWriter(System.out)
+fun readLine() = reader.readLine()
+val __inputData__ = ArrayDeque<String>()
+fun readString(): String {
+    while (__inputData__.isEmpty()) __inputData__.addAll(readLine().split(" "))
+    return __inputData__.pollFirst()
+}
+fun readInt() = readString()!!.toInt()
+fun range(n: Int) = 0 until n
+
+fun main() {
+    if (!fileName.equals("")) {
+        reader = BufferedReader(InputStreamReader(FileInputStream(fileName + ".in")))
+        out = PrintWriter(FileOutputStream(fileName + ".out"))
+    }
+    solve()
+    out.close()
+}
