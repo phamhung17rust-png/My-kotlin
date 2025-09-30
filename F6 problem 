@@ -1,0 +1,510 @@
+
+
+import java.io.PrintWriter
+import kotlin.math.*
+import kotlin.random.Random
+import kotlin.collections.sort as _sort
+import kotlin.collections.sortDescending as _sortDescending
+import kotlin.io.println as iprintln
+
+/** @author Spheniscine */
+fun main() { _writer.solve(); _writer.flush() }
+fun PrintWriter.solve() {
+//    val startTime = System.nanoTime()
+
+    val numCases = 1//readInt()
+    case@ for(case in 1..numCases) {
+        //print("Case #$case: ")
+
+        val n = readInt()
+        val C = readIntArray(n)
+
+        val q = readInt()
+        val L = IntArray(q)
+        val R = IntArray(q) {
+            L[it] = readInt()-1
+            readInt()-1
+        }
+
+        val ans = LongArray(q)
+
+        val cos = IntList()
+        val ids = IntList()
+        val ps = LongList()
+
+        var i = -1
+
+        for(qi in R.sortedIndices()) {
+            val r = R[qi]
+            while(i < r) {
+                i++
+
+                val c = C[i]
+                var j = i
+                while(cos.isNotEmpty() && cos.last() < c) {
+                    cos.pop()
+                    j = ids.pop()
+                    ps.pop()
+                }
+
+                cos.add(c)
+                ids.add(j)
+                var sum = c * (i - j + 1L)
+                if(ps.isNotEmpty()) sum += ps.last()
+                ps.add(sum)
+            }
+
+            val l = L[qi]
+            val j = ids.lowerBound(l+1) - 1
+            val m = (if(j == ids.lastIndex) r+1 else ids[j+1]) - l
+
+            ans[qi] = ps.last() - ps[j] + cos[j].toLong() * m
+        }
+
+        println(ans.joinToString(" "))
+    }
+
+//    iprintln("Time: ${(System.nanoTime() - startTime) / 1000000} ms")
+}
+
+fun IntList.lowerBound(value: Int): Int {
+    var bit = Integer.highestOneBit(size)
+    var pos = 0
+
+    while(bit > 0) {
+        val npos = pos or bit
+        if(npos <= size && this[npos-1] < value) pos = npos
+        bit = bit shr 1
+    }
+    return pos
+}
+
+class IntList(initialCapacity: Int = 12) {
+    private var arr = IntArray(initialCapacity)
+    val _arr get() = arr
+    private val capacity get() = arr.size
+    var size = 0
+        private set
+    inline val lastIndex get() = size - 1
+    inline val indices get() = 0 until size
+
+    constructor(copyFrom: IntArray): this(copyFrom.size) { copyFrom.copyInto(arr); size = copyFrom.size }
+    constructor(copyFrom: Collection<Int>): this(copyFrom.size) { arr = copyFrom.toIntArray(); size = copyFrom.size }
+
+    fun contentEquals(other: IntList): Boolean {
+        return this === other || size == other.size && indices.all { this[it] == other[it] }
+    }
+
+    private fun grow(minCapacity: Int = 8) {
+        val newCapacity = maxOf(minCapacity, capacity + (capacity shr 1))
+        arr = arr.copyOf(newCapacity)
+    }
+
+    fun ensureCapacity(minCapacity: Int) { if(capacity < minCapacity) grow(minCapacity) }
+
+    operator fun get(index: Int): Int {
+        require(index in 0 until size)
+        return arr[index]
+    }
+
+    operator fun set(index: Int, value: Int) {
+        require(index in 0 until size)
+        arr[index] = value
+    }
+
+    fun add(value: Int) {
+        if(size == capacity) grow()
+        arr[size++] = value
+    }
+
+    fun addAll(list: IntList) {
+        ensureCapacity(size + list.size)
+        list.arr.copyInto(arr, size, 0, list.size)
+        size += list.size
+    }
+
+    fun add(index: Int, element: Int) {
+        if(size == capacity) grow()
+        arr.copyInto(arr, index + 1, index, size)
+        size++
+        set(index, element)
+    }
+
+    fun clear() { size = 0 }
+
+    fun removeAt(index: Int): Int {
+        val e = get(index)
+        arr.copyInto(arr, index, index + 1, size)
+        size--
+        return e
+    }
+
+    fun indexOf(e: Int): Int {
+        for(i in 0 until size) if(this[i] == e) return i
+        return -1
+    }
+
+    fun remove(e: Int): Boolean {
+        val i = indexOf(e)
+        if(i == -1) return false
+        removeAt(i)
+        return true
+    }
+
+    operator fun iterator() = object: IntIterator() {
+        private var pos = 0
+        override fun hasNext() = pos < size
+        override fun nextInt() = get(pos++)
+    }
+
+    inline fun isEmpty() = size == 0
+    inline fun isNotEmpty() = size != 0
+
+    fun pop() = arr[--size]
+
+    fun popToSize(s: Int) {
+        require(s >= 0)
+        if(s < size) size = s
+    }
+
+    fun swap(i: Int, j: Int) { val t = this[i]; this[i] = this[j]; this[j] = t }
+    fun reverse() {
+        for(i in 0 until size / 2) swap(i, lastIndex - i)
+    }
+
+    fun shuffle(rnd: Random = random) { for(i in lastIndex downTo 1) swap(i, rnd.nextInt(i+1)) }
+
+    inline fun sortWith(cmp: (Int, Int) -> Int) { _mergeSort(_arr, size, IntArray(size), IntArray::get, IntArray::set, cmp) }
+    inline fun <T: Comparable<T>> sortBy(func: (Int) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+    inline fun <T: Comparable<T>> sortByDescending(func: (Int) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+    fun sort() { sortBy { it } }
+    fun sortDescending() { sortByDescending { it } }
+
+    fun joinToString(separator: CharSequence) = if(size == 0) "" else let {
+        buildString {
+            append(it[0])
+            for (i in 1 until size) {
+                append(separator).append(it[i])
+            }
+        }
+    }
+
+    override fun toString() = "[" + joinToString(", ") + "]"
+
+    fun toIntArray() = arr.copyOf(size)
+    fun toList() = List(size, ::get)
+
+    inline fun first() = get(0)
+    inline fun last() = get(lastIndex)
+}
+
+inline fun IntList(size: Int, init: (Int) -> Int) = IntList(size).apply {
+    for(i in 0 until size) { add(init(i)) }
+}
+inline fun IntArray.toIntList() = IntList(this)
+inline fun Collection<Int>.toIntList() = IntList(this)
+inline fun intListOf(vararg values: Int) = IntList(values)
+
+fun IntList.max() = (1 until size).fold(this[0]) { acc, i -> max(acc, this[i]) }
+fun IntList.min() = (1 until size).fold(this[0]) { acc, i -> min(acc, this[i]) }
+fun IntList.getOrNull(i: Int) = if(i in indices) get(i) else null
+inline fun IntList.count(predicate: (Int) -> Boolean) = indices.count { predicate(this[it]) }
+fun IntList.copyOf() = IntList(size, ::get)
+
+class LongList(initialCapacity: Int = 12) {
+    private var arr = LongArray(initialCapacity)
+    val _arr get() = arr
+    private val capacity get() = arr.size
+    var size = 0
+        private set
+    inline val lastIndex get() = size - 1
+    inline val indices get() = 0 until size
+
+    constructor(copyFrom: LongArray): this(copyFrom.size) { copyFrom.copyInto(arr); size = copyFrom.size }
+    constructor(copyFrom: Collection<Long>): this(copyFrom.size) { arr = copyFrom.toLongArray(); size = copyFrom.size }
+
+    fun contentEquals(other: LongList): Boolean {
+        return this === other || size == other.size && indices.all { this[it] == other[it] }
+    }
+
+    private fun grow(minCapacity: Int = 8) {
+        val newCapacity = maxOf(minCapacity, capacity + (capacity shr 1))
+        arr = arr.copyOf(newCapacity)
+    }
+
+    fun ensureCapacity(minCapacity: Int) { if(capacity < minCapacity) grow(minCapacity) }
+
+    operator fun get(index: Int): Long {
+        require(index in 0 until size)
+        return arr[index]
+    }
+
+    operator fun set(index: Int, value: Long) {
+        require(index in 0 until size)
+        arr[index] = value
+    }
+
+    fun add(value: Long) {
+        if(size == capacity) grow()
+        arr[size++] = value
+    }
+
+    fun addAll(list: LongList) {
+        ensureCapacity(size + list.size)
+        list.arr.copyInto(arr, size, 0, list.size)
+        size += list.size
+    }
+
+    fun add(index: Int, element: Long) {
+        if(size == capacity) grow()
+        arr.copyInto(arr, index + 1, index, size)
+        size++
+        set(index, element)
+    }
+
+    fun clear() { size = 0 }
+
+    fun removeAt(index: Int): Long {
+        val e = get(index)
+        arr.copyInto(arr, index, index + 1, size)
+        size--
+        return e
+    }
+
+    fun indexOf(e: Long): Int {
+        for(i in 0 until size) if(this[i] == e) return i
+        return -1
+    }
+
+    fun remove(e: Long): Boolean {
+        val i = indexOf(e)
+        if(i == -1) return false
+        removeAt(i)
+        return true
+    }
+
+    operator fun iterator() = object: LongIterator() {
+        private var pos = 0
+        override fun hasNext() = pos < size
+        override fun nextLong() = get(pos++)
+    }
+
+    inline fun isEmpty() = size == 0
+    inline fun isNotEmpty() = size != 0
+
+    fun pop() = arr[--size]
+
+    fun popToSize(s: Int) {
+        require(s >= 0)
+        if(s < size) size = s
+    }
+
+    fun swap(i: Int, j: Int) { val t = this[i]; this[i] = this[j]; this[j] = t }
+    fun reverse() {
+        for(i in 0 until size / 2) swap(i, lastIndex - i)
+    }
+
+    fun shuffle(rnd: Random = random) { for(i in lastIndex downTo 1) swap(i, rnd.nextInt(i+1)) }
+
+    inline fun sortWith(cmp: (Long, Long) -> Int) { _mergeSort(_arr, size, LongArray(size), LongArray::get, LongArray::set, cmp) }
+    inline fun <T: Comparable<T>> sortBy(func: (Long) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+    inline fun <T: Comparable<T>> sortByDescending(func: (Long) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+    fun sort() { sortBy { it } }
+    fun sortDescending() { sortByDescending { it } }
+
+    fun joinToString(separator: CharSequence) = if(size == 0) "" else let {
+        buildString {
+            append(it[0])
+            for (i in 1 until size) {
+                append(separator).append(it[i])
+            }
+        }
+    }
+
+    override fun toString() = "[" + joinToString(", ") + "]"
+
+    fun toLongArray() = arr.copyOf(size)
+    fun toList() = List(size, ::get)
+
+    inline fun first() = get(0)
+    inline fun last() = get(lastIndex)
+}
+
+inline fun LongList(size: Int, init: (Int) -> Long) = LongList(size).apply {
+    for(i in 0 until size) { add(init(i)) }
+}
+inline fun LongArray.toLongList() = LongList(this)
+inline fun Collection<Long>.toLongList() = LongList(this)
+inline fun longListOf(vararg values: Long) = LongList(values)
+
+fun LongList.max() = (1 until size).fold(this[0]) { acc, i -> max(acc, this[i]) }
+fun LongList.min() = (1 until size).fold(this[0]) { acc, i -> min(acc, this[i]) }
+fun LongList.getOrNull(i: Int) = if(i in indices) get(i) else null
+inline fun LongList.count(predicate: (Long) -> Boolean) = indices.count { predicate(this[it]) }
+fun LongList.copyOf() = LongList(size, ::get)
+
+
+infix fun Int.divCeil(other: Int) =
+    (this / other).let { if(xor(other) >= 0 && it * other != this) it+1 else it }
+
+inline infix fun Int.divFloor(other: Int) = Math.floorDiv(this, other)
+
+infix fun Long.divCeil(other: Long) =
+    (this / other).let { if(xor(other) >= 0 && it * other != this) it+1 else it }
+inline infix fun Long.divCeil(other: Int) = divCeil(other.toLong())
+
+inline infix fun Long.divFloor(other: Long) = Math.floorDiv(this, other)
+
+/** IO */
+//@JvmField val ONLINE_JUDGE = System.getProperty("ONLINE_JUDGE") != null
+//const val PATH = "src/main/resources/"
+//@JvmField val INPUT = File(PATH + "input.txt").inputStream()
+//@JvmField val OUTPUT = File(PATH + "output.txt").outputStream()
+@JvmField val INPUT = System.`in`
+@JvmField val OUTPUT = System.out
+
+const val _BUFFER_SIZE = 1 shl 16
+@JvmField val _buffer = ByteArray(_BUFFER_SIZE)
+@JvmField var _bufferPt = 0
+@JvmField var _bytesRead = 0
+
+tailrec fun readChar(): Char {
+    if(_bufferPt == _bytesRead) {
+        _bufferPt = 0
+        _bytesRead = INPUT.read(_buffer, 0, _BUFFER_SIZE)
+    }
+    return if(_bytesRead < 0) Char.MIN_VALUE
+    else {
+        val c = _buffer[_bufferPt++].toChar()
+        if (c == '\r') readChar() else c
+    }
+}
+
+/** @param skipNext Whether to skip the next character (usually whitespace), defaults to true */
+fun readCharArray(n: Int, skipNext: Boolean = true): CharArray {
+    val res = CharArray(n) { readChar() }
+    if(skipNext) readChar()
+    return res
+}
+
+fun readLine(): String? {
+    var c = readChar()
+    return if(c == Char.MIN_VALUE) null
+    else buildString {
+        while(c != '\n' && c != Char.MIN_VALUE) {
+            append(c)
+            c = readChar()
+        }
+    }
+}
+fun readLn() = readLine()!!
+
+fun read() = buildString {
+    var c = readChar()
+    while(c <= ' ') {
+        if(c == Char.MIN_VALUE) return@buildString
+        c = readChar()
+    }
+    do {
+        append(c)
+        c = readChar()
+    } while(c > ' ')
+}
+fun readInt() = read().toInt()
+fun readDouble() = read().toDouble()
+fun readLong() = read().toLong()
+fun readStrings(n: Int) = List(n) { read() }
+fun readLines(n: Int) = List(n) { readLn() }
+fun readInts(n: Int) = List(n) { read().toInt() }
+fun readIntArray(n: Int) = IntArray(n) { read().toInt() }
+fun readDoubles(n: Int) = List(n) { read().toDouble() }
+fun readDoubleArray(n: Int) = DoubleArray(n) { read().toDouble() }
+fun readLongs(n: Int) = List(n) { read().toLong() }
+fun readLongArray(n: Int) = LongArray(n) { read().toLong() }
+
+@JvmField val _writer = PrintWriter(OUTPUT, false)
+
+/**  sort overrides to avoid quicksort attacks */
+
+@JvmField var _random: Random? = null
+val random get() = _random ?: Random(0x594E215C123 * System.nanoTime()).also { _random = it }
+
+inline fun <A, T> _mergeSort(a0: A, n: Int, tmp0: A, get: A.(Int) -> T, set: A.(Int, T) -> Unit, cmp: (T, T) -> Int) {
+    var a = a0
+    var tmp = tmp0
+    var len = 1
+    while(len < n) {
+        var l = 0
+        while(true) {
+            val m = l + len
+            if(m >= n) break
+            val r = min(n, m + len)
+            var i = l
+            var j = m
+            for(k in l until r) {
+                if(i != m && (j == r || cmp(a.get(i), a.get(j)) <= 0)) {
+                    tmp.set(k, a.get(i++))
+                } else tmp.set(k, a.get(j++))
+            }
+            l = r
+        }
+        for(i in l until n) tmp.set(i, a.get(i))
+        val t = a; a = tmp; tmp = t
+        len += len
+    }
+    if(a !== a0) for(i in 0 until n) a0.set(i, tmp0.get(i))
+}
+
+inline fun IntArray.sortWith(cmp: (Int, Int) -> Int) { _mergeSort(this, size, IntArray(size), IntArray::get, IntArray::set, cmp) }
+inline fun <T: Comparable<T>> IntArray.sortBy(func: (Int) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> IntArray.sortByDescending(func: (Int) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun IntArray.sort() { sortBy { it } }
+fun IntArray.sortDescending() { sortByDescending { it } }
+
+inline fun LongArray.sortWith(cmp: (Long, Long) -> Int) { _mergeSort(this, size, LongArray(size), LongArray::get, LongArray::set, cmp) }
+inline fun <T: Comparable<T>> LongArray.sortBy(func: (Long) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> LongArray.sortByDescending(func: (Long) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun LongArray.sort() { sortBy { it } }
+fun LongArray.sortDescending() { sortByDescending { it } }
+
+inline fun DoubleArray.sortWith(cmp: (Double, Double) -> Int) { _mergeSort(this, size, DoubleArray(size), DoubleArray::get, DoubleArray::set, cmp) }
+inline fun <T: Comparable<T>> DoubleArray.sortBy(func: (Double) -> T) { sortWith { a, b -> func(a).compareTo(func(b)) } }
+inline fun <T: Comparable<T>> DoubleArray.sortByDescending(func: (Double) -> T) { sortWith { a, b -> func(b).compareTo(func(a)) } }
+fun DoubleArray.sort() { sortBy { it } }
+fun DoubleArray.sortDescending() { sortByDescending { it } }
+
+inline fun CharArray.sort() { _sort() }
+inline fun CharArray.sortDescending() { _sortDescending() }
+
+inline fun <T : Comparable<T>> Array<out T>.sort() = _sort()
+inline fun <T : Comparable<T>> Array<out T>.sortDescending() = _sortDescending()
+inline fun <T : Comparable<T>> MutableList<out T>.sort() = _sort()
+inline fun <T : Comparable<T>> MutableList<out T>.sortDescending() = _sortDescending()
+
+// import preserving junk function
+@Suppress("NonAsciiCharacters") fun 雪花飄飄北風嘯嘯天地一片蒼茫() { iprintln(max(1, 2)) }
+
+fun IntArray.sumLong() = sumOf { it.toLong() }
+
+fun IntArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun IntArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun LongArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun LongArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun DoubleArray.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun DoubleArray.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun <T: Comparable<T>> Array<T>.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun <T: Comparable<T>> Array<T>.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+fun <T: Comparable<T>> List<T>.sortedIndices() = IntArray(size) { it }.also { it.sortBy(::get) }
+fun <T: Comparable<T>> List<T>.sortedIndicesDescending() = IntArray(size) { it }.also { it.sortByDescending(::get) }
+
+// max/min Kotlin 1.6 -> 1.4 shim
+fun IntArray.max() = maxOf { it }
+fun IntArray.min() = minOf { it }
+fun LongArray.max() = maxOf { it }
+fun LongArray.min() = minOf { it }
+fun CharArray.max() = maxOf { it }
+fun CharArray.min() = minOf { it }
+fun <T : Comparable<T>> Iterable<T>.max() = maxOf { it }
+fun <T : Comparable<T>> Iterable<T>.min() = minOf { it }
+fun <T : Comparable<T>> Sequence<T>.max() = maxOf { it }
+fun <T : Comparable<T>> Sequence<T>.min() = minOf { it }
