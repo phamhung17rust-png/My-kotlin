@@ -1,0 +1,106 @@
+fun main() {
+    val n = readLine()!!.toInt()
+    val a = readLine()!!.split(" ").map { it.toLong() }.toLongArray()
+    val b = readLine()!!.split(" ").map { it.toLong() }.toLongArray()
+    val c = readLine()!!.split(" ").map { it.toLong() }.toLongArray()
+    val q = readLine()!!.toInt()
+    var ql = IntArray(q)
+    var qr = IntArray(q)
+    var qans = LongArray(q) {Long.MAX_VALUE}
+    // 1e9 * 3e5
+    for (i in 0..q-1) {
+        val (l, r) = readLine()!!.split(" ").map { it.toInt() }.toIntArray()
+        ql[i] = l
+        qr[i] = r - 1
+        if (ql[i] == qr[i]) qans[i] = a[l - 1] + minOf(minOf(c[l - 1], b[l - 1]), c[l])
+    }
+//    var qids: MutableList<Int> = ArrayList()
+//    for (i in 0..q-1) qids.add(i)
+    var qids = IntArray(q)
+    for(i in 0..q-1) qids[i] = i
+    var A = LongArray(n + 1)
+    var B = LongArray(n + 1)
+    var C = LongArray(n + 1)
+    var D = LongArray(n + 1)
+    var s = LongArray(n + 1)
+    s[0] = 0
+    for (i in 1..n-1) {
+        s[i] = s[i - 1] + c[i - 1]
+        A[i] = a[i - 1] - s[i]
+        B[i] = b[i - 1] + s[i]
+        C[i] = b[i - 1] - s[i]
+        D[i] = a[i - 1] + s[i]
+    }
+    s[n] = s[n - 1] + c[n - 1]
+    var LA = LongArray(n + 1)
+    var LB = LongArray(n + 1)
+    var LAB = LongArray(n + 1)
+    var RA = LongArray(n + 1)
+    var RB = LongArray(n + 1)
+    var RAB = LongArray(n + 1)
+     var lab = 1
+    fun solve(L:Int, R:Int, qid:IntArray) {
+        if (L >= R) return
+        val M = (L + R) / 2
+        LA[M] = A[M]
+        LB[M] = B[M]
+        LAB[M] = A[M] + B[M]
+        for (i in M - 1 downTo L) {
+            LA[i] = minOf(LA[i + 1], A[i])
+            LB[i] = minOf(LB[i + 1], B[i])
+            LAB[i] = minOf(LAB[i + 1], A[i] + LB[i])
+        }
+        RA[M + 1] = A[M + 1]
+        RB[M + 1] = B[M + 1]
+        RAB[M + 1] = A[M + 1] + B[M + 1]
+        for (i in M + 2 .. R) {
+            RA[i] = minOf(RA[i - 1], A[i])
+            RB[i] = minOf(RB[i - 1], B[i])
+            RAB[i] = minOf(RAB[i - 1], RA[i] + B[i])
+        }
+//        var LQ: MutableList<Int> = ArrayList()
+//        var RQ: MutableList<Int> = ArrayList()
+//        println("[$L, $R]")
+//        println("A = ${A.copyOfRange(L, R + 1).joinToString(" ")}")
+//        println("B = ${B.copyOfRange(L, R + 1).joinToString(" ")}")
+//        println("qid = ${qid.joinToString(" ")}")
+          var sl = 0
+        var sr = 0
+        for (i in qid) {
+            if (qr[i] <= M) sl += 1
+            else if(ql[i] > M) sr += 1
+            else {
+//                println("$i: ${ql[i]}, ${qr[i]}")
+                qans[i] = minOf(qans[i], LAB[ql[i]])
+                qans[i] = minOf(qans[i], RAB[qr[i]])
+                qans[i] = minOf(qans[i], LA[ql[i]] + RB[qr[i]])
+                if (lab == 1) {
+                    qans[i] = minOf(qans[i], s[qr[i] + 1] + minOf(RA[qr[i]], LA[ql[i]]))
+                } else {
+                    qans[i] = minOf(qans[i], - s[ql[i] - 1] + minOf(RB[qr[i]], LB[ql[i]]))
+                }
+//                println("=> ${qans[i]}")
+            }
+        }
+        var LQ = IntArray(sl)
+        var RQ = IntArray(sr)
+        for (i in qid) {
+            if (qr[i] <= M) {
+                sl--
+                LQ[sl] = i
+            }
+            if (ql[i] > M) {
+                sr--
+                RQ[sr] = i
+            }
+        }
+        solve(L, M, LQ)
+        solve(M + 1, R, RQ)
+    }
+    solve(1, n - 1, qids)
+    A = C
+    B = D
+    lab = 2
+    solve(1, n - 1, qids)
+    println(qans.joinToString(" "))
+}
