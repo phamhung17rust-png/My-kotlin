@@ -1,0 +1,78 @@
+fun solve() {
+    val (N, M) = readLine()!!.split(" ").map { it.toInt() }
+    val G = Array(N) { mutableListOf<Pair<Int, Int>>() }
+    
+    repeat(M) { i ->
+        var (a, b) = readLine()!!.split(" ").map { it.toInt() - 1 }
+        G[a].add(i to b)
+        G[b].add(i to a)
+    }
+
+    for (v in 0 until N) {
+        if (G[v].size % 2 != 0) {
+            println("NO")
+            return
+        }
+    }
+
+    val done = IntArray(N)
+    val used = IntArray(M)
+    val isin = IntArray(N)
+    val ANS = mutableListOf<List<Int>>()
+    val prog = IntArray(N)
+
+    for (v in 0 until N) {
+        if (done[v] != 0) continue
+        val V = mutableListOf<Int>()
+
+        fun dfs(v: Int) {
+            while (prog[v] < G[v].size) {
+                val (i, w) = G[v][prog[v]]
+                prog[v] += 1
+                if (used[i] != 0) continue
+                used[i] = 1
+                dfs(w)
+            }
+            V.add(v)
+        }
+
+        dfs(v)
+
+        for (v in V) {
+            done[v] = 1
+        }
+
+        val st = mutableListOf<Int>()
+        for (v in V) {
+            if (isin[v] != 0) {
+                val cyc = mutableListOf(v)
+                while (isin[v] != 0) {
+                    val x = st.removeAt(st.lastIndex)
+                    isin[x] = 0
+                    cyc.add(x)
+                }
+                ANS.add(cyc)
+            }
+            st.add(v)
+            isin[v] = 1
+        }
+        assert(st.size == 1)
+        isin[st.removeAt(st.lastIndex)] = 0
+    }
+
+    println("YES")
+    println(ANS.size)
+    for (A in ANS) {
+        val result = A.map { it + 1 }
+        println("${A.size} ${result.joinToString(" ")}")
+    }
+}
+
+fun main() {
+    val T = 1
+    // Uncomment the following line if there are multiple test cases
+    // val T = readLine()!!.toInt()
+    repeat(T) {
+        solve()
+    }
+}
